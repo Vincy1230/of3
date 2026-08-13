@@ -236,18 +236,18 @@ body {
 
 .btn-danger {
   color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
 }
 
 .btn-danger:hover {
-  background: color-mix(in srgb, var(--color-danger) 22%, transparent);
+  background: var(--color-danger);
   border-color: var(--color-danger);
-  color: var(--color-danger);
+  color: var(--color-bg);
 }
 
 .btn-danger:active {
-  background: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  filter: brightness(0.92);
 }
 
 .btn-ghost {
