@@ -136,6 +136,9 @@ export default {
     download: '下载 .json',
     reset: '全部重置',
     resetConfirm: '确定重置所有 Query 并重新开始吗？此操作无法撤销。',
+    previewMode: '预览',
+    editMode: '编辑',
+    parseError: 'JSON 解析失败：{message}',
   },
   validation: {
     title: '校验结果',

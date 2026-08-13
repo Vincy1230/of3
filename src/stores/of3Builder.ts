@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { MoleculeType } from '@/types/of3'
 import type { ChainDraft, QueryDraft } from '@/types/draft'
-import { createEmptyChain, createEmptyQuery, createId, deserializeInput } from '@/utils/of3Draft'
+import { createEmptyChain, createEmptyQuery, createId, deserializeInput, parseOf3Input } from '@/utils/of3Draft'
 import { serializeInput } from '@/utils/of3Serialize'
 import { validateInput } from '@/utils/of3Validate'
 import { OF3_EXAMPLES } from '@/data/examples'
@@ -104,6 +104,17 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     activeQueryUiId.value = queries.value[0]?.uiId ?? null
   }
 
+  /** Parses raw JSON text and replaces the current form state with it. Throws on invalid input, leaving state untouched. */
+  function loadFromJson(text: string) {
+    const input = parseOf3Input(text)
+    const state = deserializeInput(input)
+    queries.value = state.queries
+    ccdFilePath.value = state.ccdFilePath
+    activeQueryUiId.value = queries.value.some((q) => q.uiId === activeQueryUiId.value)
+      ? activeQueryUiId.value
+      : (queries.value[0]?.uiId ?? null)
+  }
+
   function reset() {
     const query = createEmptyQuery('query_1')
     queries.value = [query]
@@ -129,6 +140,7 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     setPocketConstraintEnabled,
     setCcdFilePath,
     loadExample,
+    loadFromJson,
     reset,
     createId,
   }

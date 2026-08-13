@@ -136,6 +136,9 @@ export default {
     download: 'Download .json',
     reset: 'Reset everything',
     resetConfirm: 'Reset all queries and start over? This cannot be undone.',
+    previewMode: 'Preview',
+    editMode: 'Edit',
+    parseError: 'Failed to parse JSON: {message}',
   },
   validation: {
     title: 'Validation',

@@ -4,6 +4,8 @@
 import type { Chain, MoleculeType, Of3Input, Of3Query } from '@/types/of3'
 import type { BuilderState, ChainDraft, QueryDraft } from '@/types/draft'
 
+const MOLECULE_TYPES: MoleculeType[] = ['protein', 'rna', 'dna', 'ligand']
+
 let idCounter = 0
 
 export function createId(prefix: string): string {
@@ -116,4 +118,54 @@ function queryFromSpec(key: string, query: Of3Query): QueryDraft {
 export function deserializeInput(input: Of3Input): Pick<BuilderState, 'queries' | 'ccdFilePath'> {
   const queries = Object.entries(input.queries).map(([key, query]) => queryFromSpec(key, query))
   return { queries, ccdFilePath: input.ccd_file_path ?? '' }
+}
+
+/** Parses and structurally validates raw JSON text pasted/typed by the user before it is deserialized into form state. */
+export function parseOf3Input(text: string): Of3Input {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch (err) {
+    throw new Error(err instanceof Error ? err.message : String(err))
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('Root value must be a JSON object with a "queries" field.')
+  }
+  const root = parsed as Record<string, unknown>
+
+  if (typeof root.queries !== 'object' || root.queries === null || Array.isArray(root.queries)) {
+    throw new Error('"queries" must be an object mapping query keys to query objects.')
+  }
+  const queryEntries = Object.entries(root.queries as Record<string, unknown>)
+  if (queryEntries.length === 0) {
+    throw new Error('"queries" must contain at least one query.')
+  }
+
+  for (const [queryKey, query] of queryEntries) {
+    if (typeof query !== 'object' || query === null || Array.isArray(query)) {
+      throw new Error(`Query "${queryKey}" must be an object.`)
+    }
+    const chains = (query as Record<string, unknown>).chains
+    if (!Array.isArray(chains)) {
+      throw new Error(`Query "${queryKey}" is missing a "chains" array.`)
+    }
+    chains.forEach((chain, index) => {
+      if (typeof chain !== 'object' || chain === null || Array.isArray(chain)) {
+        throw new Error(`Query "${queryKey}", chain #${index + 1} must be an object.`)
+      }
+      const moleculeType = (chain as Record<string, unknown>).molecule_type
+      if (!MOLECULE_TYPES.includes(moleculeType as MoleculeType)) {
+        throw new Error(
+          `Query "${queryKey}", chain #${index + 1} has an invalid "molecule_type" (expected one of ${MOLECULE_TYPES.join(', ')}).`,
+        )
+      }
+    })
+  }
+
+  if (root.ccd_file_path !== undefined && typeof root.ccd_file_path !== 'string') {
+    throw new Error('"ccd_file_path" must be a string.')
+  }
+
+  return root as unknown as Of3Input
 }

@@ -3,10 +3,11 @@
   Email: vincy@vincy1230.net
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import { highlightJson } from '@/utils/jsonHighlight'
+import SegmentedControl from '@/components/SegmentedControl.vue'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
@@ -15,6 +16,55 @@ const jsonText = computed(() => JSON.stringify(store.output, null, 2))
 const highlighted = computed(() => highlightJson(jsonText.value))
 const copied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
+
+const mode = ref<'view' | 'edit'>('view')
+const draftText = ref(jsonText.value)
+const parseError = ref<string | null>(null)
+const dirty = ref(false)
+let applyTimer: ReturnType<typeof setTimeout> | undefined
+
+// Only follow store changes while the draft has no unapplied edits, so the
+// user's in-progress typing (or an unresolved parse error) is never clobbered.
+watch(jsonText, (value) => {
+  if (!dirty.value) draftText.value = value
+})
+
+function applyDraft() {
+  clearTimeout(applyTimer)
+  try {
+    store.loadFromJson(draftText.value)
+    parseError.value = null
+    dirty.value = false
+  } catch (err) {
+    parseError.value = err instanceof Error ? err.message : String(err)
+  }
+}
+
+function onDraftInput(event: Event) {
+  dirty.value = true
+  const inputType = (event as InputEvent).inputType
+  clearTimeout(applyTimer)
+  if (inputType === 'insertFromPaste') {
+    applyDraft()
+  } else {
+    applyTimer = setTimeout(applyDraft, 450)
+  }
+}
+
+function onDraftBlur() {
+  if (dirty.value) applyDraft()
+}
+
+function setMode(next: 'view' | 'edit') {
+  if (next === 'edit') {
+    draftText.value = jsonText.value
+    parseError.value = null
+    dirty.value = false
+  } else if (dirty.value) {
+    applyDraft()
+  }
+  mode.value = next
+}
 
 async function copyJson() {
   await navigator.clipboard.writeText(jsonText.value)
@@ -43,14 +93,43 @@ function resetAll() {
     <div class="json-header">
       <h2>{{ t('jsonPreview.title') }}</h2>
       <div class="json-actions">
+        <SegmentedControl
+          class="mode-toggle"
+          :model-value="mode"
+          :options="[
+            { value: 'view', label: t('jsonPreview.previewMode') },
+            { value: 'edit', label: t('jsonPreview.editMode') },
+          ]"
+          @update:model-value="setMode"
+        />
         <button type="button" class="btn btn-sm" @click="copyJson">
           {{ copied ? t('jsonPreview.copied') : t('jsonPreview.copy') }}
         </button>
-        <button type="button" class="btn btn-sm" @click="downloadJson">{{ t('jsonPreview.download') }}</button>
-        <button type="button" class="btn btn-sm btn-danger" @click="resetAll">{{ t('jsonPreview.reset') }}</button>
+        <button type="button" class="btn btn-sm" @click="downloadJson">
+          {{ t('jsonPreview.download') }}
+        </button>
+        <button type="button" class="btn btn-sm btn-danger" @click="resetAll">
+          {{ t('jsonPreview.reset') }}
+        </button>
       </div>
     </div>
-    <pre class="json-view"><code v-html="highlighted"></code></pre>
+
+    <template v-if="mode === 'edit'">
+      <textarea
+        class="json-editor"
+        :class="{ invalid: parseError }"
+        v-model="draftText"
+        spellcheck="false"
+        autocapitalize="off"
+        autocorrect="off"
+        @input="onDraftInput"
+        @blur="onDraftBlur"
+      ></textarea>
+      <p v-if="parseError" class="hint json-error">
+        {{ t('jsonPreview.parseError', { message: parseError }) }}
+      </p>
+    </template>
+    <pre v-else class="json-view"><code v-html="highlighted"></code></pre>
   </section>
 </template>
 
@@ -81,22 +160,60 @@ function resetAll() {
 
 .json-actions {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
 }
 
-.json-view {
+.mode-toggle {
+  padding: 2px;
+}
+
+.mode-toggle :deep(.segment) {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+
+.json-view,
+.json-editor {
   flex: 1;
   min-height: 0;
   margin: 0;
   padding: 0.9rem 1rem;
-  overflow: auto;
   border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   font-family: var(--font-mono);
   font-size: 0.82rem;
   line-height: 1.5;
+}
+
+.json-view {
+  overflow: auto;
+}
+
+.json-editor {
+  overflow: auto;
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  resize: none;
+  white-space: pre;
+}
+
+.json-editor:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.json-editor.invalid {
+  border-color: var(--color-danger);
+}
+
+.json-error {
+  flex-shrink: 0;
+  margin: 0;
+  color: var(--color-danger);
 }
 
 .json-view code {
