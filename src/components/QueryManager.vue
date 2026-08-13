@@ -18,10 +18,6 @@ function onRemove(uiId: string) {
 
 <template>
   <CollapsibleSection :title="t('query.title')">
-    <div class="toolbar">
-      <button type="button" class="btn btn-sm" @click="store.addQuery()">+ {{ t('query.addQuery') }}</button>
-    </div>
-
     <div class="card-list">
       <div
         v-for="query in store.queries"
@@ -64,6 +60,10 @@ function onRemove(uiId: string) {
         </div>
       </div>
     </div>
+
+    <div class="toolbar">
+      <button type="button" class="btn btn-sm" @click="store.addQuery()">+ {{ t('query.addQuery') }}</button>
+    </div>
   </CollapsibleSection>
 </template>
 
@@ -86,7 +86,10 @@ function onRemove(uiId: string) {
   background: transparent;
   color: inherit;
   padding: 0;
-  min-width: 0;
+  align-self: flex-start;
+  field-sizing: content;
+  min-width: 1ch;
+  max-width: 100%;
 }
 
 .query-key-input:focus {

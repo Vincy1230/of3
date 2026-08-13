@@ -137,7 +137,8 @@ body {
 .field input[type='text'],
 .field input[type='number'],
 .field textarea,
-.field select {
+.field select,
+.repeatable-row input[type='text'] {
   font: inherit;
   padding: 0.55rem 0.7rem;
   border-radius: var(--radius-md);
@@ -155,7 +156,8 @@ body {
 
 .field input:focus,
 .field textarea:focus,
-.field select:focus {
+.field select:focus,
+.repeatable-row input:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
