@@ -99,6 +99,10 @@ function resetAll() {
   line-height: 1.5;
 }
 
+.json-view code {
+  font-family: inherit;
+}
+
 .json-view :deep(.json-key) {
   color: var(--color-accent);
 }
