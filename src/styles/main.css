@@ -1,0 +1,362 @@
+/*
+ * Author: Vincy SHI
+ * Email: vincy@vincy1230.net
+ */
+
+:root {
+  color-scheme: light;
+  --color-bg: #f4f7fb;
+  --color-bg-elevated: #ffffff;
+  --color-border: #e0e6ef;
+  --color-text: #131b2e;
+  --color-text-muted: #64748b;
+  --color-accent: #2563eb;
+  --color-accent-soft: #e2ecff;
+  --color-accent-contrast: #ffffff;
+  --gradient-accent: linear-gradient(135deg, #22c1dc 0%, #2f7cf0 60%, #2947d6 100%);
+  --color-success: #0f9d6f;
+  --color-success-soft: #e3f8f0;
+  --color-active: #ea9a1f;
+  --color-active-soft: #fdf0dc;
+  --color-danger: #dc2f4a;
+  --color-danger-soft: #fde3e8;
+  --shadow-elevated: none;
+  --font-ui: 'Noto Sans', 'Noto Sans SC', 'Noto Sans HK', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Source Han Mono', 'Noto Sans Mono CJK SC', ui-monospace, Menlo, Consolas, monospace;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+}
+
+/* 简/繁中文页面分别优先使用对应地区字形的思源黑体分发版本，避免简体
+   字形出现在繁体页面（反之亦然）；英文默认页面则优先使用通用的
+   Noto Sans，三者本质同源，度量一致，混排不会跳字体。 */
+html:lang(zh-CN) {
+  --font-ui: 'Noto Sans SC', 'Noto Sans', 'Noto Sans HK', sans-serif;
+}
+html:lang(zh-HK) {
+  --font-ui: 'Noto Sans HK', 'Noto Sans SC', 'Noto Sans', sans-serif;
+}
+
+/* 深浅色支持"自动跟随系统"与"手动指定"两种模式。useTheme.ts 会把
+   实际生效的主题（auto 时按 prefers-color-scheme 解析出的结果）统一
+   写到 <html data-theme> 上，所以这里只需维护一份深色变量，不必再用
+   @media (prefers-color-scheme) 重复一份、两处分别维护容易漏改。 */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0b0f1a;
+  --color-bg-elevated: #141a29;
+  --color-border: #263047;
+  --color-text: #e7ecf7;
+  --color-text-muted: #8b96ad;
+  --color-accent: #5b9dff;
+  --color-accent-soft: #16243f;
+  --color-accent-contrast: #06101f;
+  --gradient-accent: linear-gradient(135deg, #35d6f0 0%, #5b9dff 60%, #6e7bf2 100%);
+  --color-success: #2dd4a7;
+  --color-success-soft: #113328;
+  --color-active: #f5b955;
+  --color-active-soft: #3d2d10;
+  --color-danger: #ff6b7d;
+  --color-danger-soft: #3a1620;
+  --shadow-elevated: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#app {
+  min-height: 100%;
+}
+
+@media (max-width: 1100px) {
+  html,
+  body,
+  #app {
+    height: auto;
+  }
+}
+
+::selection {
+  background: var(--color-accent-soft);
+}
+
+.panel {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* 表单字段、按钮、卡片列表这几类元素在本项目里跨多个组件（4 种链类型
+   表单、pocket constraint、query 管理……）重复出现，统一放共享工具类
+   而不是每个组件各写一份 scoped 样式，减少重复。 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field > label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.hint.success {
+  color: var(--color-success);
+}
+
+.field input[type='text'],
+.field input[type='number'],
+.field textarea,
+.field select {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  max-width: 100%;
+}
+
+.field textarea {
+  font-family: var(--font-mono);
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.field-row > .field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-primary {
+  background: var(--gradient-accent);
+  border: none;
+  color: var(--color-accent-contrast);
+}
+
+.btn-primary:hover {
+  color: var(--color-accent-contrast);
+  filter: brightness(1.05);
+}
+
+.btn-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger-soft);
+}
+
+.btn-danger:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--color-bg);
+}
+
+.card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.issue {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.issue.error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.issue.warning {
+  background: var(--color-active-soft);
+  color: var(--color-active);
+}
+
+.issue-context {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.repeatable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.repeatable h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.repeatable-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.repeatable-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.repeatable-row input.narrow {
+  flex: 0 0 96px;
+}
