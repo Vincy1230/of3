@@ -21,22 +21,16 @@
   --color-danger: #dc2f4a;
   --color-danger-soft: #fde3e8;
   --shadow-elevated: none;
-  --font-ui: 'Noto Sans SC', 'Noto Sans HK', 'Noto Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Source Han Mono', 'Noto Sans Mono CJK SC', ui-monospace, Menlo, Consolas, monospace;
+  /* 不按语言区分字体（与 pairwise 项目不同，pairwise 繁中会换成港区
+     字形版本；of3 三种语言统一用同一套字体）：正文用思源黑体简体分发
+     版本 Noto Sans SC，等宽用思源等宽 Source Han Mono。只用一种字体
+     覆盖拉丁字符也顺带避免了中英文混排时因换字体取拉丁字形导致同一行
+     文字忽高忽低的问题。 */
+  --font-ui: 'Noto Sans SC', sans-serif;
+  --font-mono: 'Source Han Mono', 'Noto Sans Mono CJK SC', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   --radius-lg: 16px;
   --radius-md: 10px;
   --radius-sm: 6px;
-}
-
-/* 与 pairwise 项目同一套修复：默认（含英文页面）始终优先用思源黑体
-   简体分发版本 Noto Sans SC，不单独换成通用的 Noto Sans——后者虽然
-   也覆盖拉丁字符，但字重/字高度量与 Noto Sans SC 的拉丁字形并不一致，
-   中英文混排（例如页面标题里的 "OpenFold3" 和中文各占一部分）在两种
-   字体间切换取字形会导致同一行文字忽高忽低。统一只用 Noto Sans SC 的
-   拉丁字形就不会有这个问题。繁中(HK) 额外优先使用港区字形版本，避免
-   简体字形出现在繁体页面。 */
-html:lang(zh-HK) {
-  --font-ui: 'Noto Sans HK', 'Noto Sans SC', 'Noto Sans', sans-serif;
 }
 
 /* 深浅色支持"自动跟随系统"与"手动指定"两种模式。useTheme.ts 会把
