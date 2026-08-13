@@ -7,7 +7,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { LOCALE_PATHS, SUPPORTED_LOCALES, type SupportedLocale } from '@/locales'
 import { setThemeMode, themeMode, type ThemeMode } from '@/composables/useTheme'
-import logoUrl from '@/assets/logo.png'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -33,12 +32,9 @@ function switchLocale(l: SupportedLocale) {
 
 <template>
   <header class="app-header">
-    <div class="brand">
-      <img class="logo" :src="logoUrl" alt="" />
-      <div class="titles">
-        <h1>{{ t('app.title') }}</h1>
-        <p>{{ t('app.subtitle') }}</p>
-      </div>
+    <div class="titles">
+      <h1>{{ t('app.title') }}</h1>
+      <p>{{ t('app.subtitle') }}</p>
     </div>
     <div class="header-actions">
       <a
@@ -107,20 +103,6 @@ function switchLocale(l: SupportedLocale) {
   background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-border);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.logo {
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  flex-shrink: 0;
 }
 
 .titles h1 {
