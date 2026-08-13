@@ -1,0 +1,54 @@
+# Author: Vincy SHI
+# Email: vincy@vincy1230.net
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_ICP_CODE: ${{ vars.VITE_ICP_CODE }}
+          VITE_ICP_URL: ${{ vars.VITE_ICP_URL }}
+          VITE_MPS_CODE: ${{ vars.VITE_MPS_CODE }}
+          VITE_MPS_URL: ${{ vars.VITE_MPS_URL }}
+          VITE_BAIDU_SITE_VERIFICATION: ${{ vars.VITE_BAIDU_SITE_VERIFICATION }}
+          VITE_GOOGLE_SITE_VERIFICATION: ${{ vars.VITE_GOOGLE_SITE_VERIFICATION }}
+          VITE_BING_SITE_VERIFICATION: ${{ vars.VITE_BING_SITE_VERIFICATION }}
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

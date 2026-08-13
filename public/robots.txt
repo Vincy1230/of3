@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://of3.vincy1230.net/sitemap.xml
