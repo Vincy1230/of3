@@ -67,8 +67,8 @@ function removeResidueRow(index: number) {
         <div v-for="(row, index) in activeQuery.pocketConstraint.residues" :key="index" class="repeatable-row">
           <input type="text" v-model="row.chainId" :placeholder="t('pocketConstraint.residueChainLabel')" class="narrow" />
           <input type="text" v-model="row.residueId" :placeholder="t('pocketConstraint.residueIdLabel')" class="narrow" />
-          <button type="button" class="btn btn-xs btn-danger" @click="removeResidueRow(index)">
-            <IconTrash :size="11" />
+          <button type="button" class="btn btn-sm btn-danger" @click="removeResidueRow(index)">
+            <IconTrash />
           </button>
         </div>
         <div class="toolbar">

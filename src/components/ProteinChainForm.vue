@@ -63,9 +63,14 @@ function removeNonCanonicalRow(i: number) {
         <h3>{{ t('chain.templateCifTitle') }}</h3>
         <div v-for="(row, i) in chain.templateCifRows" :key="i" class="repeatable-row">
           <input type="text" v-model="row.path" :placeholder="t('chain.templateCifPathLabel')" />
-          <input type="text" v-model="row.chainId" :placeholder="t('chain.templateCifChainIdLabel')" class="narrow" />
-          <button type="button" class="btn btn-xs btn-danger" @click="removeTemplateCifRow(i)">
-            <IconTrash :size="11" />
+          <input
+            type="text"
+            v-model="row.chainId"
+            :placeholder="t('chain.templateCifChainIdLabel')"
+            class="cif-chain-id"
+          />
+          <button type="button" class="btn btn-sm btn-danger" @click="removeTemplateCifRow(i)">
+            <IconTrash />
           </button>
         </div>
         <div class="toolbar">
@@ -78,8 +83,8 @@ function removeNonCanonicalRow(i: number) {
         <div v-for="(row, i) in chain.nonCanonicalResidues" :key="i" class="repeatable-row">
           <input type="text" v-model="row.index" :placeholder="t('chain.nonCanonicalIndexLabel')" class="narrow" />
           <input type="text" v-model="row.code" :placeholder="t('chain.nonCanonicalCodeLabel')" class="narrow" />
-          <button type="button" class="btn btn-xs btn-danger" @click="removeNonCanonicalRow(i)">
-            <IconTrash :size="11" />
+          <button type="button" class="btn btn-sm btn-danger" @click="removeNonCanonicalRow(i)">
+            <IconTrash />
           </button>
         </div>
         <div class="toolbar">
@@ -93,6 +98,10 @@ function removeNonCanonicalRow(i: number) {
 </template>
 
 <style scoped>
+.cif-chain-id {
+  flex: 0 0 200px;
+}
+
 .chain-form {
   display: flex;
   flex-direction: column;
