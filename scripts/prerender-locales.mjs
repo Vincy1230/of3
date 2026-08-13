@@ -120,6 +120,12 @@ async function main() {
   const rootHtml = renderForLocale(template, DEFAULT_LOCALE)
   await writeFile(templatePath, rootHtml, 'utf-8')
   console.log(`prerender-locales: rewrote dist/index.html (${DEFAULT_LOCALE}, canonical -> /en/)`)
+
+  const zhAliasHtml = renderForLocale(template, 'zh-CN')
+  const zhAliasDir = path.join(distDir, 'zh')
+  await mkdir(zhAliasDir, { recursive: true })
+  await writeFile(path.join(zhAliasDir, 'index.html'), zhAliasHtml, 'utf-8')
+  console.log('prerender-locales: wrote dist/zh/index.html (zh-CN, canonical -> /zh-cn/)')
 }
 
 main().catch((err) => {

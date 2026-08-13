@@ -12,6 +12,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView, meta: { locale: 'en' as SupportedLocale } },
     { path: '/en/', name: 'home-en', component: HomeView, meta: { locale: 'en' as SupportedLocale } },
+    { path: '/zh/', name: 'home-zh', component: HomeView, meta: { locale: 'zh-CN' as SupportedLocale } },
     { path: '/zh-cn/', name: 'home-zh-cn', component: HomeView, meta: { locale: 'zh-CN' as SupportedLocale } },
     { path: '/zh-hk/', name: 'home-zh-hk', component: HomeView, meta: { locale: 'zh-HK' as SupportedLocale } },
     { path: '/:pathMatch(.*)*', redirect: '/en/' },
