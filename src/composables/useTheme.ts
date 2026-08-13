@@ -28,11 +28,6 @@ export function setThemeMode(mode: ThemeMode) {
   else localStorage.setItem(STORAGE_KEY, mode)
 }
 
-// 单例副作用：把"实际生效"的主题（auto 时跟随系统解析出的结果）同步到
-// <html data-theme>。main.css 只需针对 [data-theme="dark"] 写一份深色
-// 变量，不必再用 @media (prefers-color-scheme) 重复一份，避免两处
-// 同时维护、容易漏改的问题。index.html 里另有一段内联脚本做首屏同步，
-// 避免刷新时先出现错误主题再跳变的闪烁。
 watchEffect(() => {
   if (typeof document === 'undefined') return
   const resolved: ResolvedTheme = themeMode.value === 'auto' ? (systemPrefersDark.value ? 'dark' : 'light') : themeMode.value

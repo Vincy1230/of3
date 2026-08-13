@@ -21,11 +21,6 @@
   --color-danger: #dc2f4a;
   --color-danger-soft: #fde3e8;
   --shadow-elevated: none;
-  /* 不按语言区分字体（与 pairwise 项目不同，pairwise 繁中会换成港区
-     字形版本；of3 三种语言统一用同一套字体）：正文用思源黑体简体分发
-     版本 Noto Sans SC，等宽用思源等宽 Source Han Mono。只用一种字体
-     覆盖拉丁字符也顺带避免了中英文混排时因换字体取拉丁字形导致同一行
-     文字忽高忽低的问题。 */
   --font-ui: 'Noto Sans SC', sans-serif;
   --font-mono: 'Source Han Mono', 'Noto Sans Mono CJK SC', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   --radius-lg: 16px;
@@ -33,10 +28,6 @@
   --radius-sm: 6px;
 }
 
-/* 深浅色支持"自动跟随系统"与"手动指定"两种模式。useTheme.ts 会把
-   实际生效的主题（auto 时按 prefers-color-scheme 解析出的结果）统一
-   写到 <html data-theme> 上，所以这里只需维护一份深色变量，不必再用
-   @media (prefers-color-scheme) 重复一份、两处分别维护容易漏改。 */
 :root[data-theme='dark'] {
   color-scheme: dark;
   --color-bg: #0b0f1a;
@@ -92,10 +83,6 @@ body {
   background: var(--color-accent-soft);
 }
 
-/* 全局滚动条换成跟随主题的细滚动条，不用浏览器默认样式。
-   scrollbar-color/scrollbar-width 是可继承属性，放在 :root 上就能
-   覆盖所有滚动容器（Firefox）；::-webkit-scrollbar 不带元素选择器时
-   Chromium/Safari 会对所有可滚动元素生效，同样不用逐个组件重复写。 */
 :root {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
@@ -141,9 +128,6 @@ body {
   white-space: nowrap;
 }
 
-/* 表单字段、按钮、卡片列表这几类元素在本项目里跨多个组件（4 种链类型
-   表单、pocket constraint、query 管理……）重复出现，统一放共享工具类
-   而不是每个组件各写一份 scoped 样式，减少重复。 */
 .field {
   display: flex;
   flex-direction: column;

@@ -58,9 +58,10 @@ function onBackdropClick(event: MouseEvent) {
   color: var(--color-text);
 }
 
-/* 必须限定 [open]：class 选择器优先级高于浏览器默认的
-   `dialog:not([open]) { display: none }`，如果不加 [open] 限定，
-   这条规则会在对话框关闭时也强制 display:flex，导致它一直可见。 */
+/* Must be gated on [open]: this class selector outranks the browser's
+   default `dialog:not([open]) { display: none }`. Without [open] here,
+   this rule would force display:flex even while closed, so the dialog
+   would never actually hide. */
 .modal.size-full[open] {
   width: 96vw;
   height: 94vh;

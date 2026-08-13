@@ -34,19 +34,15 @@
     >
     <title>OpenFold3 Input Builder · Structure-Prediction JSON Generator</title>
 
-    <!-- 三个验证码不写死在代码里，构建时通过环境变量整体注入（见
-         .github/workflows/deploy.yml），与页脚备案号同一套做法。本地
-         开发未设置时 Vite 会保留 %VITE_...% 原样并打印警告，不影响
-         其他功能。 -->
     <meta name="baidu-site-verification" content="%VITE_BAIDU_SITE_VERIFICATION%" />
     <meta name="google-site-verification" content="%VITE_GOOGLE_SITE_VERIFICATION%" />
     <meta name="msvalidate.01" content="%VITE_BING_SITE_VERIFICATION%" />
 
     <script type="text/javascript">
-      // 配合 public/404.html 实现 GitHub Pages 上的 SPA 路径回退：
-      // 404.html 把真实路径编码进 "?/" 查询串跳回根路径，这里在
-      // Vue Router 接管前把它解码还原成真实路径。
-      // 参考：https://github.com/rafgraph/spa-github-pages
+      // Works with public/404.html to implement SPA path fallback on GitHub
+      // Pages: 404.html encodes the real path into a "?/" query string and
+      // bounces to the root; this decodes it back before Vue Router takes
+      // over. Reference: https://github.com/rafgraph/spa-github-pages
       (function (l) {
         if (l.search[1] === '/') {
           var decoded = l.search
@@ -61,11 +57,8 @@
       })(window.location)
     </script>
     <script type="text/javascript">
-      // 首屏防闪烁：main.css 只维护 [data-theme="dark"] 一份深色变量
-      // （不再用 @media prefers-color-scheme 重复一份），所以这里必须
-      // 在样式生效前就把"实际生效"的主题（auto 时按系统偏好解析）算好
-      // 并写到 <html data-theme> 上，否则 auto + 系统深色的用户会先看到
-      // 错误的浅色再跳变。这段逻辑需要和 useTheme.ts 保持一致。
+      // Must stay in sync with useTheme.ts's theme-resolution logic, or
+      // users on 'auto' will flash the wrong theme before it corrects.
       ;(function () {
         try {
           var stored = localStorage.getItem('of3:theme')

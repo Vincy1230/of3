@@ -8,11 +8,12 @@
     <meta charset="utf-8">
     <title>Redirecting…</title>
     <script type="text/javascript">
-      // 静态托管（GitHub Pages）没有服务端路由，直接访问 /zh-hk/、/en/
-      // 等子路径或刷新页面时会先命中这个 404.html。这里把路径编码进
-      // querystring 重定向回根目录，index.html 里的配套脚本再把它
-      // 还原成真实路径交给 Vue Router 处理。
-      // 参考：https://github.com/rafgraph/spa-github-pages
+      // Static hosting (GitHub Pages) has no server-side routing, so a
+      // direct visit to /zh-hk/, /en/, etc. or a page refresh hits this
+      // 404.html first. This encodes the path into a querystring redirect
+      // back to root; the counterpart script in index.html decodes it back
+      // and hands it to Vue Router.
+      // Reference: https://github.com/rafgraph/spa-github-pages
       var l = window.location
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/?/' +

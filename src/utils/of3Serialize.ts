@@ -1,10 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// 纯函数：把表单编辑态（src/types/draft.ts）转换成严格符合 OpenFold3
-// schema（src/types/of3.ts）的 JSON 对象。所有可选字段只在用户显式提供
-// 了偏离默认值的内容时才写入，让生成的 JSON 尽量贴近官方文档示例的风格
-// （而不是把每个默认值都罗列出来）。
 
 import type {
   Chain,

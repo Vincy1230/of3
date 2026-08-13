@@ -1,11 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// OpenFold3 官方文档「输入格式参考」页面 (Section 5) 提供的全部 7 份示例
-// query JSON，逐字内嵌（未做任何字段改写）。用途：
-//   1. PresetSelector 的"加载示例"数据源；
-//   2. of3Serialize 的回归测试基准（见 src/utils/__tests__）。
-// 来源：https://openfold-3.readthedocs.io/en/latest/input_format_reference.html
 
 import type { Of3Input } from '@/types/of3'
 

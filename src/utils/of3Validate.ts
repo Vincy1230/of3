@@ -1,8 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// 纯函数：对表单编辑态做 OpenFold3 schema 层面的校验，返回结构化 Issue
-// 列表（不带文案），具体文案由 ValidationSummary.vue 按 code 查 i18n。
 
 import type { BuilderState, ChainDraft, QueryDraft } from '@/types/draft'
 

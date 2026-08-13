@@ -56,7 +56,6 @@ const copyrightText = computed(() => {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  /* 默认（有备案信息且一行放得下）：版权居左、备案信息居右。 */
   justify-content: space-between;
   gap: 0.75rem 1.5rem;
   flex-wrap: wrap;
@@ -66,14 +65,10 @@ const copyrightText = computed(() => {
   border-top: 1px solid var(--color-border);
 }
 
-/* 没有任何备案信息时，只剩版权一项，space-between 会把它顶到最左边；
-   这种情况下改成整体居右。 */
 .site-footer:not(:has(.filings)) {
   justify-content: flex-end;
 }
 
-/* 宽度不够、两部分被迫各占一行时，space-between 会让第二行也贴左，
-   这里统一强制两行都靠右对齐；同时把行间距收紧，让底栏尽量矮。 */
 @media (max-width: 600px) {
   .site-footer {
     justify-content: flex-end;

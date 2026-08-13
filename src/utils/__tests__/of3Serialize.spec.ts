@@ -1,14 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// 回归测试：把 OpenFold3 官方文档给出的全部 7 份示例 JSON 反序列化成
-// 表单编辑态、再序列化回 JSON，验证语义上与原始示例完全一致。
-//
-// 官方示例里 chain_ids 对单个值的写法并不统一（有的写成裸字符串
-// "A"，有的写成单元素数组 ["A"]），两种写法在 schema 里语义等价
-// （str | list[str]）。本项目的序列化逻辑固定输出"长度为 1 时用字符串"
-// 这一种规范形式，所以比较前需要把预期值里的单元素数组也拍平成字符串，
-// 否则会对着文档本身的写法不一致误报失败。
 
 import { describe, expect, it } from 'vitest'
 import { OF3_EXAMPLES } from '@/data/examples'

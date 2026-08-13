@@ -1,13 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// 纯数据、零依赖（不引用 Vue/i18n），因此既能被浏览器运行时的
-// useSeoMeta.ts 引入，也能被构建后在 Node 里跑的
-// scripts/prerender-locales.mjs 直接 import。
-//
-// description 需要和 src/locales/*.ts 里各语言的 app.subtitle 保持
-// 一致——运行时（客户端路由切换）用的是 i18n 的实时文案，这里的副本
-// 只服务于构建期生成的静态 HTML，两处如果改动其一记得同步另一处。
 
 export const SITE_URL = 'https://of3.vincy1230.net'
 export const OG_IMAGE = `${SITE_URL}/og-image.jpg`
@@ -20,7 +12,6 @@ export const LOCALE_PATHS = {
 
 export const SUPPORTED_LOCALES = ['en', 'zh-CN', 'zh-HK']
 
-/** 未匹配路径 / 根路径都归到这个语言，作为整站的规范默认语言。 */
 export const DEFAULT_LOCALE = 'en'
 
 export const TITLES = {

@@ -1,10 +1,5 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
-//
-// 表单编辑态（src/types/draft.ts）的构造与反序列化：
-//   - createEmptyChain / createEmptyQuery：给 store 的“新增”操作用的默认值工厂；
-//   - deserializeInput：把一份符合 OpenFold3 schema 的 JSON（例如内嵌示例）
-//     还原成表单编辑态，是 of3Serialize.ts 的逆操作，供 PresetSelector 使用。
 
 import type { Chain, MoleculeType, Of3Input, Of3Query } from '@/types/of3'
 import type { BuilderState, ChainDraft, QueryDraft } from '@/types/draft'
