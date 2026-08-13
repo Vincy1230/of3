@@ -3,11 +3,13 @@ Author: Vincy SHI
 Email: vincy@vincy1230.net
 -->
 
+**English** | [简体中文](./README.zh-CN.md) | [繁體中文](./README.zh-HK.md)
+
 # OpenFold3 Input Builder
 
-纯前端的 [OpenFold3](https://openfold-3.readthedocs.io/en/latest/input_format_reference.html) 输入 JSON 构建器，分步引导用户填写 protein/RNA/DNA/ligand 链、MSA/模板选项与 pocket constraint，严格按官方 schema 生成一份可直接复制使用的 query JSON。内置官方文档给出的全部 7 个示例，可一键加载查看效果。
+A client-side [OpenFold3](https://openfold-3.readthedocs.io/en/latest/input_format_reference.html) input JSON builder. It guides you step by step through protein/RNA/DNA/ligand chains, MSA/template options, and pocket constraints, and generates a query JSON that strictly follows the official schema and is ready to copy and use. All 7 examples from the official docs are built in and can be loaded with one click.
 
-技术栈：Vue 3 + TypeScript + Vite + Pinia + Vue Router + vue-i18n，部署于 GitHub Pages [of3.vincy1230.net](https://of3.vincy1230.net/)
+Stack: Vue 3 + TypeScript + Vite + Pinia + Vue Router + vue-i18n, deployed on GitHub Pages at [of3.vincy1230.net](https://of3.vincy1230.net/)
 
 ## Project Setup
 
