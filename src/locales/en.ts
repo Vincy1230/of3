@@ -159,7 +159,4 @@ export default {
     'pocket-residues-empty': 'Pocket constraint needs at least one pocket residue.',
     'non-canonical-residue-out-of-range': 'Residue index {index} is outside the sequence length.',
   },
-  footer: {
-    copyright: '© {year} Vincy SHI',
-  },
 } as const

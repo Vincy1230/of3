@@ -4,7 +4,6 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 import beianIcon from '@/assets/beian.png'
 
 // 备案号与对应链接都不写死在代码里，构建时通过环境变量整体注入
@@ -16,14 +15,11 @@ const icpUrl = import.meta.env.VITE_ICP_URL
 const mpsCode = import.meta.env.VITE_MPS_CODE
 const mpsUrl = import.meta.env.VITE_MPS_URL
 
-// 本项目默认语言是英文（不同于同类项目默认简体中文的情况），备案号
-// 不再与语言绑定——只要配置了就在全部语言页面展示，不按 locale 隐藏。
-const { t } = useI18n()
 const showFilings = computed(() => !!(icpCode || mpsCode))
 
 const copyrightText = computed(() => {
   const currentYear = new Date().getFullYear()
-  return t('footer.copyright', { year: currentYear <= 2026 ? '2026' : `2026-${currentYear}` })
+  return currentYear <= 2026 ? '© 2026 Vincy SHI' : `© 2026-${currentYear} Vincy SHI`
 })
 </script>
 

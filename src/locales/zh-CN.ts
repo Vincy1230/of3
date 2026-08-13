@@ -159,7 +159,4 @@ export default {
     'pocket-residues-empty': '口袋约束至少需要一个口袋残基。',
     'non-canonical-residue-out-of-range': '残基序号 {index} 超出了序列长度范围。',
   },
-  footer: {
-    copyright: '© {year} Vincy SHI',
-  },
 } as const
