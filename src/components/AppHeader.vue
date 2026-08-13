@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { LOCALE_PATHS, SUPPORTED_LOCALES, type SupportedLocale } from '@/locales'
 import { setThemeMode, themeMode, type ThemeMode } from '@/composables/useTheme'
+import logoUrl from '@/assets/logo.png'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -33,17 +34,7 @@ function switchLocale(l: SupportedLocale) {
 <template>
   <header class="app-header">
     <div class="brand">
-      <svg class="logo" viewBox="0 0 48 48" role="img" aria-label="of3">
-        <rect width="48" height="48" rx="12" fill="url(#logo-gradient)" />
-        <text x="24" y="30" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="17" font-weight="700" fill="#ffffff">of3</text>
-        <defs>
-          <linearGradient id="logo-gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#22c1dc" />
-            <stop offset="0.6" stop-color="#2f7cf0" />
-            <stop offset="1" stop-color="#2947d6" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <img class="logo" :src="logoUrl" alt="" />
       <div class="titles">
         <h1>{{ t('app.title') }}</h1>
         <p>{{ t('app.subtitle') }}</p>
@@ -125,9 +116,10 @@ function switchLocale(l: SupportedLocale) {
 }
 
 .logo {
-  width: 3rem;
-  height: 3rem;
+  width: 3.25rem;
+  height: 3.25rem;
   border-radius: var(--radius-md);
+  object-fit: cover;
   flex-shrink: 0;
 }
 
