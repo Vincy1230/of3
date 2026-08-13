@@ -56,7 +56,6 @@ import SiteFooter from '@/components/SiteFooter.vue'
 .col {
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: thin;
 }
 
 .controls {

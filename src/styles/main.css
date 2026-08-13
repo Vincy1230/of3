@@ -92,6 +92,39 @@ body {
   background: var(--color-accent-soft);
 }
 
+/* 全局滚动条换成跟随主题的细滚动条，不用浏览器默认样式。
+   scrollbar-color/scrollbar-width 是可继承属性，放在 :root 上就能
+   覆盖所有滚动容器（Firefox）；::-webkit-scrollbar 不带元素选择器时
+   Chromium/Safari 会对所有可滚动元素生效，同样不用逐个组件重复写。 */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .panel {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
