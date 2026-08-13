@@ -55,6 +55,7 @@ import SiteFooter from '@/components/SiteFooter.vue'
 
 .col {
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
 }
 
@@ -83,7 +84,7 @@ import SiteFooter from '@/components/SiteFooter.vue'
   }
 
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
   }
 
