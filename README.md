@@ -9,10 +9,6 @@ Email: vincy@vincy1230.net
 
 技术栈：Vue 3 + TypeScript + Vite + Pinia + Vue Router + vue-i18n，部署于 GitHub Pages [of3.vincy1230.net](https://of3.vincy1230.net/)
 
-## 已知缺口
-
-以下二进制品牌素材暂缺（不影响功能），欢迎替换：`public/favicon*`、`public/apple-touch-icon.png`、`public/og-image.jpg`。
-
 ## Project Setup
 
 ```sh
