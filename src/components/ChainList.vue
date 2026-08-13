@@ -54,12 +54,6 @@ function removeChain(chain: ChainDraft) {
   <CollapsibleSection v-if="activeQuery" :title="t('chain.title')">
     <span class="chip">{{ activeQuery.key }}</span>
 
-    <div class="add-chain-row">
-      <button v-for="type in MOLECULE_TYPES" :key="type" type="button" class="btn btn-sm" @click="addChain(type)">
-        + {{ t(`common.${type}`) }}
-      </button>
-    </div>
-
     <p v-if="activeQuery.chains.length === 0" class="hint">{{ t('chain.emptyHint') }}</p>
 
     <div v-else class="card-list">
@@ -92,17 +86,17 @@ function removeChain(chain: ChainDraft) {
       </div>
     </div>
 
+    <div class="toolbar">
+      <button v-for="type in MOLECULE_TYPES" :key="type" type="button" class="btn btn-sm" @click="addChain(type)">
+        + {{ t(`common.${type}`) }}
+      </button>
+    </div>
+
     <ChainEditorModal :open="modalOpen" :chain="editingChain" @close="modalOpen = false" />
   </CollapsibleSection>
 </template>
 
 <style scoped>
-.add-chain-row {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
 .chain-card {
   cursor: pointer;
 }
