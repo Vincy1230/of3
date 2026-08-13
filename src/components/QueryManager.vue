@@ -6,6 +6,8 @@
 import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import CollapsibleSection from './CollapsibleSection.vue'
+import IconCopy from './icons/IconCopy.vue'
+import IconTrash from './icons/IconTrash.vue'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
@@ -45,7 +47,7 @@ function onRemove(uiId: string) {
             :aria-label="t('query.duplicateQuery')"
             @click.stop="store.duplicateQuery(query.uiId)"
           >
-            ⧉
+            <IconCopy />
           </button>
           <button
             type="button"
@@ -55,7 +57,7 @@ function onRemove(uiId: string) {
             :aria-label="t('query.removeQuery')"
             @click.stop="onRemove(query.uiId)"
           >
-            ×
+            <IconTrash />
           </button>
         </div>
       </div>

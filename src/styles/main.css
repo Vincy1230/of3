@@ -181,6 +181,10 @@ body {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   font: inherit;
   font-weight: 600;
   font-size: 0.85rem;
@@ -231,6 +235,13 @@ body {
 .btn-sm {
   padding: 0.3rem 0.6rem;
   font-size: 0.78rem;
+}
+
+/* 三级删除按钮（链编辑表单/口袋约束里可重复行内的删除），要比二级
+   （链卡片）的删除按钮更小一档，体现出嵌套层级的视觉差异。 */
+.btn-xs {
+  padding: 0.15rem 0.35rem;
+  font-size: 0.68rem;
 }
 
 .chip {

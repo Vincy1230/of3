@@ -6,6 +6,7 @@
 import { useI18n } from 'vue-i18n'
 import type { ChainDraft } from '@/types/draft'
 import CollapsibleSection from './CollapsibleSection.vue'
+import IconTrash from './icons/IconTrash.vue'
 
 const props = defineProps<{ chain: ChainDraft }>()
 const { t } = useI18n()
@@ -63,7 +64,9 @@ function removeNonCanonicalRow(i: number) {
         <div v-for="(row, i) in chain.templateCifRows" :key="i" class="repeatable-row">
           <input type="text" v-model="row.path" :placeholder="t('chain.templateCifPathLabel')" />
           <input type="text" v-model="row.chainId" :placeholder="t('chain.templateCifChainIdLabel')" class="narrow" />
-          <button type="button" class="btn btn-sm btn-danger" @click="removeTemplateCifRow(i)">×</button>
+          <button type="button" class="btn btn-xs btn-danger" @click="removeTemplateCifRow(i)">
+            <IconTrash :size="11" />
+          </button>
         </div>
         <div class="toolbar">
           <button type="button" class="btn btn-sm" @click="addTemplateCifRow">+ {{ t('chain.addTemplateCifRow') }}</button>
@@ -75,7 +78,9 @@ function removeNonCanonicalRow(i: number) {
         <div v-for="(row, i) in chain.nonCanonicalResidues" :key="i" class="repeatable-row">
           <input type="text" v-model="row.index" :placeholder="t('chain.nonCanonicalIndexLabel')" class="narrow" />
           <input type="text" v-model="row.code" :placeholder="t('chain.nonCanonicalCodeLabel')" class="narrow" />
-          <button type="button" class="btn btn-sm btn-danger" @click="removeNonCanonicalRow(i)">×</button>
+          <button type="button" class="btn btn-xs btn-danger" @click="removeNonCanonicalRow(i)">
+            <IconTrash :size="11" />
+          </button>
         </div>
         <div class="toolbar">
           <button type="button" class="btn btn-sm" @click="addNonCanonicalRow">

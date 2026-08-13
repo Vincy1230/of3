@@ -10,6 +10,7 @@ import type { ChainDraft } from '@/types/draft'
 import type { MoleculeType } from '@/types/of3'
 import CollapsibleSection from './CollapsibleSection.vue'
 import ChainEditorModal from './ChainEditorModal.vue'
+import IconTrash from './icons/IconTrash.vue'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
@@ -85,7 +86,7 @@ function removeChain(chain: ChainDraft) {
             :aria-label="t('chain.removeChain')"
             @click.stop="removeChain(chain)"
           >
-            ×
+            <IconTrash />
           </button>
         </div>
       </div>

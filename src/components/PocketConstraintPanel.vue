@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import CollapsibleSection from './CollapsibleSection.vue'
+import IconTrash from './icons/IconTrash.vue'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
@@ -66,7 +67,9 @@ function removeResidueRow(index: number) {
         <div v-for="(row, index) in activeQuery.pocketConstraint.residues" :key="index" class="repeatable-row">
           <input type="text" v-model="row.chainId" :placeholder="t('pocketConstraint.residueChainLabel')" class="narrow" />
           <input type="text" v-model="row.residueId" :placeholder="t('pocketConstraint.residueIdLabel')" class="narrow" />
-          <button type="button" class="btn btn-sm btn-danger" @click="removeResidueRow(index)">×</button>
+          <button type="button" class="btn btn-xs btn-danger" @click="removeResidueRow(index)">
+            <IconTrash :size="11" />
+          </button>
         </div>
         <div class="toolbar">
           <button type="button" class="btn btn-sm" @click="addResidueRow">+ {{ t('pocketConstraint.addResidueRow') }}</button>
