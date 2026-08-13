@@ -16,10 +16,10 @@ const icpUrl = import.meta.env.VITE_ICP_URL
 const mpsCode = import.meta.env.VITE_MPS_CODE
 const mpsUrl = import.meta.env.VITE_MPS_URL
 
-// ICP/公安备案是中国大陆法规要求，仅在简体中文页面展示；
-// 切换到繁体中文或英文时自动隐藏，避免向海外/港澳台用户展示无关信息。
-const { locale, t } = useI18n()
-const showFilings = computed(() => locale.value === 'zh-CN' && !!(icpCode || mpsCode))
+// 本项目默认语言是英文（不同于同类项目默认简体中文的情况），备案号
+// 不再与语言绑定——只要配置了就在全部语言页面展示，不按 locale 隐藏。
+const { t } = useI18n()
+const showFilings = computed(() => !!(icpCode || mpsCode))
 
 const copyrightText = computed(() => {
   const currentYear = new Date().getFullYear()
