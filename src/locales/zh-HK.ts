@@ -7,7 +7,6 @@ export default {
     subtitle: '分步引導填寫 OpenFold3 結構預測輸入 JSON',
   },
   header: {
-    githubStar: '前往 GitHub',
     languageLabel: '語言',
     themeLabel: '主題',
     themeAuto: '跟隨系統',

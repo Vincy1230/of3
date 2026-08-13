@@ -6,7 +6,7 @@ import zhCN from './zh-CN'
 import zhHK from './zh-HK'
 import en from './en'
 
-export const SUPPORTED_LOCALES = ['zh-CN', 'zh-HK', 'en'] as const
+export const SUPPORTED_LOCALES = ['en', 'zh-CN', 'zh-HK'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 const DEFAULT_LOCALE: SupportedLocale = 'en'

@@ -12,9 +12,9 @@ const { t, locale } = useI18n()
 const router = useRouter()
 
 const LOCALE_LABELS: Record<SupportedLocale, string> = {
+  en: 'EN',
   'zh-CN': '简',
   'zh-HK': '繁',
-  en: 'EN',
 }
 
 const THEME_MODES: ThemeMode[] = ['auto', 'light', 'dark']
@@ -68,7 +68,7 @@ function switchLocale(l: SupportedLocale) {
                0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
           />
         </svg>
-        <span>{{ t('header.githubStar') }}</span>
+        <span>Star on GitHub</span>
       </a>
 
       <div class="pill-group" role="group" :aria-label="t('header.languageLabel')">

@@ -7,7 +7,6 @@ export default {
     subtitle: 'A step-by-step guided form for building OpenFold3 structure-prediction input JSON',
   },
   header: {
-    githubStar: 'Star on GitHub',
     languageLabel: 'Language',
     themeLabel: 'Theme',
     themeAuto: 'Follow system',

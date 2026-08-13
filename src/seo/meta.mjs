@@ -18,7 +18,7 @@ export const LOCALE_PATHS = {
   en: '/en/',
 }
 
-export const SUPPORTED_LOCALES = ['zh-CN', 'zh-HK', 'en']
+export const SUPPORTED_LOCALES = ['en', 'zh-CN', 'zh-HK']
 
 /** 未匹配路径 / 根路径都归到这个语言，作为整站的规范默认语言。 */
 export const DEFAULT_LOCALE = 'en'
