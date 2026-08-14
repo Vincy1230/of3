@@ -22,9 +22,6 @@ watch(
   },
 )
 
-function onBackdropClick(event: MouseEvent) {
-  if (event.target === dialogRef.value) emit('close')
-}
 </script>
 
 <template>
@@ -34,7 +31,6 @@ function onBackdropClick(event: MouseEvent) {
     :class="`size-${props.size}`"
     @cancel.prevent="emit('close')"
     @close="emit('close')"
-    @click="onBackdropClick"
   >
     <div class="modal-header">
       <h3>{{ titleText }}</h3>
