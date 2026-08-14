@@ -88,7 +88,8 @@ export default {
     ligandModeCcd: 'CCD code',
     smilesLabel: 'SMILES string',
     ccdCodesLabel: 'CCD code',
-    ccdCodesHint: 'A single three-letter component code, e.g. "NAG" (multiple codes per chain aren\'t supported yet).',
+    ccdCodesHint:
+      'A single three-letter component code, e.g. "NAG" (multiple codes per chain aren\'t supported yet).',
     cyclic: 'Cyclic (head-to-tail)',
     advancedTitle: 'MSA & template options',
     mainMsaPathsLabel: 'Main MSA file path(s)',
@@ -105,7 +106,7 @@ export default {
     editChain: 'Edit chain',
     removeChain: 'Remove chain',
     removeConfirm: 'Remove this chain?',
-    emptyHint: 'No chains yet — add at least one to build a valid query.',
+    emptyHint: 'No chains yet.',
     summarySequence: '{n} aa',
     summaryLigandSmiles: 'SMILES',
     summaryLigandCcd: 'CCD {codes}',
@@ -125,7 +126,7 @@ export default {
   },
   queryOptions: {
     title: 'MSA options',
-    hint: 'Applies to every chain in this query — OpenFold3 controls MSA usage per query, not per chain.',
+    hint: 'Applies to every chain in this query, not per chain.',
     useMsas: 'Use MSAs',
     useMainMsas: 'Use main (unpaired) MSAs',
     usePairedMsas: 'Use paired MSAs',
@@ -143,7 +144,7 @@ export default {
   },
   validation: {
     title: 'Validation',
-    noIssues: 'Looks good — this JSON matches the OpenFold3 input schema.',
+    noIssues: 'This JSON matches the OpenFold3 input schema.',
     errorLabel: 'Error',
     warningLabel: 'Warning',
     context: 'Query "{queryKey}"',
@@ -154,14 +155,18 @@ export default {
     queryNotObject: 'This query must be an object.',
     queryChainsInvalid: 'This query is missing a "chains" array.',
     chainNotObject: 'Chain #{index} must be an object.',
-    chainMoleculeTypeInvalid: 'Chain #{index} has a missing or invalid "molecule_type" (expected protein, rna, dna, or ligand).',
-    rootUnrecognizedField: 'Unrecognized field "{field}" at the JSON root — OpenFold3 silently ignores it rather than using it.',
+    chainMoleculeTypeInvalid:
+      'Chain #{index} has a missing or invalid "molecule_type" (expected protein, rna, dna, or ligand).',
+    rootUnrecognizedField:
+      'Unrecognized field "{field}" at the JSON root; OpenFold3 silently ignores it.',
     rootSeedsField:
-      '"seeds" isn\'t meant to be set here — the docs say OpenFold3 only reads it back from the output query set, not from your input JSON. Use the --num-model-seeds CLI flag or runner.yml to control seeds instead.',
-    queryUnrecognizedField: 'Unrecognized field "{field}" in this query — OpenFold3 silently ignores it rather than using it.',
-    chainUnrecognizedField: 'Unrecognized field "{field}" on this chain — OpenFold3 rejects unknown chain fields instead of ignoring them.',
+      '"seeds" is not read from the input JSON, only echoed in the output. Use the --num-model-seeds CLI flag or runner.yml to control seeds.',
+    queryUnrecognizedField:
+      'Unrecognized field "{field}" in this query; OpenFold3 silently ignores it.',
+    chainUnrecognizedField:
+      'Unrecognized field "{field}" on this chain; OpenFold3 rejects it rather than ignoring it.',
     pocketConstraintUnrecognizedField:
-      'Unrecognized field "{field}" in this pocket constraint — OpenFold3 rejects unknown fields there instead of ignoring them.',
+      'Unrecognized field "{field}" in this pocket constraint; OpenFold3 rejects it rather than ignoring it.',
     queryKeyEmpty: 'Query key cannot be empty.',
     queryKeyDuplicate: 'Query key "{queryKey}" is used more than once.',
     queryNoChains: 'This query has no chains yet.',
@@ -171,20 +176,22 @@ export default {
     sequenceInvalidChars: 'Sequence contains characters outside the allowed alphabet.',
     ligandMissingIdentifier: 'Provide either a SMILES string or a CCD code for this ligand.',
     ligandSdfNotImplemented:
-      "OpenFold3 doesn't implement SDF ligand input yet — it raises NotImplementedError while building the structure. Use SMILES or a CCD code instead.",
+      "OpenFold3 doesn't support SDF ligand input yet and will error when building the structure. Use SMILES or a CCD code instead.",
     ligandMultipleCcdNotImplemented:
-      "OpenFold3 doesn't support multiple CCD codes on a single chain yet — it raises NotImplementedError while building the structure. Use a single CCD code or SMILES instead.",
-    pocketLigandNotFound: 'Pocket constraint ligand chain "{ligandId}" does not match any ligand chain in this query.',
+      "OpenFold3 doesn't support multiple CCD codes on a single chain yet and will error when building the structure. Use a single CCD code or SMILES instead.",
+    pocketLigandNotFound:
+      'Pocket constraint ligand chain "{ligandId}" does not match any ligand chain in this query.',
     pocketLigandIdEmpty: 'Pocket constraint needs a ligand chain to be selected.',
     pocketResiduesEmpty: 'Pocket constraint needs at least one pocket residue.',
     pocketMaxDistanceInvalid: 'Max distance must be a positive number.',
-    chainTemplateConflict: 'A chain cannot specify both a template alignment file and template CIF files.',
+    chainTemplateConflict:
+      'A chain cannot specify both a template alignment file and template CIF files.',
     chainTemplateCifLengthMismatch:
-      "The imported JSON's template_cif_chain_ids didn't have as many entries as template_cif_paths — some rows may have been paired up wrong or dropped on import. Check the template rows below.",
+      'template_cif_chain_ids and template_cif_paths have different entry counts in the imported JSON; some rows may be mismatched or dropped. Check the template rows below.',
     ligandIdentifierConflict:
-      'The imported JSON gave more than one of smiles/ccd_codes/sdf_file_path for this ligand — only one was kept, the rest were dropped on import. Provide just one.',
+      'The imported JSON specified more than one of smiles/ccd_codes/sdf_file_path for this ligand; only one was kept. Provide just one.',
     nonCanonicalResidueOutOfRange: 'Residue index {index} is outside the sequence length.',
     covalentBondsNoEffect:
-      "The current OpenFold3 release doesn't consume covalent_bonds downstream — it parses without error, but has no effect on the prediction.",
+      "The current OpenFold3 release doesn't use the covalent_bonds field; it parses without error but has no effect on the prediction.",
   },
 } as const

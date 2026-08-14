@@ -105,13 +105,13 @@ export default {
     editChain: '編輯鏈',
     removeChain: '刪除鏈',
     removeConfirm: '確定刪除這條鏈嗎？',
-    emptyHint: '尚未有鏈——至少新增一條才能組成有效的 Query。',
+    emptyHint: '尚未有鏈。',
     summarySequence: '{n} 個殘基',
     summaryLigandSmiles: 'SMILES',
     summaryLigandCcd: 'CCD {codes}',
   },
   pocketConstraint: {
-    title: '口袋約束（Pocket Constraint）',
+    title: '口袋約束',
     enable: '啟用口袋約束',
     hint: '讓小分子配體的擺放偏向使用者指定的結合位點殘基。',
     ligandChainLabel: '目標配體鏈',
@@ -125,7 +125,7 @@ export default {
   },
   queryOptions: {
     title: 'MSA 選項',
-    hint: '套用於這個 Query 裡的所有鏈——OpenFold3 是按 Query 而不是按鏈來控制 MSA 使用的。',
+    hint: '套用於這個 Query 裡的所有鏈，而不是逐條鏈設定。',
     useMsas: '啟用 MSA',
     useMainMsas: '使用主要（未配對）MSA',
     usePairedMsas: '使用配對 MSA',
@@ -143,7 +143,7 @@ export default {
   },
   validation: {
     title: '驗證結果',
-    noIssues: '一切正常——目前 JSON 符合 OpenFold3 輸入格式。',
+    noIssues: '目前 JSON 符合 OpenFold3 輸入格式。',
     errorLabel: '錯誤',
     warningLabel: '警告',
     context: 'Query "{queryKey}"',
@@ -154,13 +154,15 @@ export default {
     queryNotObject: '這個 query 必須是一個物件。',
     queryChainsInvalid: '這個 query 缺少 "chains" 陣列。',
     chainNotObject: '第 {index} 條鏈必須是一個物件。',
-    chainMoleculeTypeInvalid: '第 {index} 條鏈缺少合法的 "molecule_type"（應為 protein、rna、dna 或 ligand 之一）。',
-    rootUnrecognizedField: 'JSON 根節點存在未識別欄位 "{field}"——OpenFold3 會靜默忽略它，不會生效。',
+    chainMoleculeTypeInvalid:
+      '第 {index} 條鏈缺少合法的 "molecule_type"（應為 protein、rna、dna 或 ligand 之一）。',
+    rootUnrecognizedField: 'JSON 根節點存在未識別欄位 "{field}"，將被靜默忽略。',
     rootSeedsField:
-      '"seeds" 不應該寫在這裡——按官方文件說明，OpenFold3 只會把它寫進輸出的 query set 裡回顯，並不會從輸入 JSON 裡讀取；請改用命令列參數 --num-model-seeds 或 runner.yml 來控制亂數種子。',
-    queryUnrecognizedField: '這個 query 中存在未識別欄位 "{field}"——OpenFold3 會靜默忽略它，不會生效。',
-    chainUnrecognizedField: '這條鏈上存在未識別欄位 "{field}"——OpenFold3 會拒絕含有未知欄位的鏈，而不是忽略它。',
-    pocketConstraintUnrecognizedField: '口袋約束裡存在未識別欄位 "{field}"——OpenFold3 會拒絕含有未知欄位的口袋約束，而不是忽略它。',
+      '"seeds" 不會從輸入 JSON 中讀取，僅在輸出中回顯；請使用 --num-model-seeds 參數或 runner.yml 控制亂數種子。',
+    queryUnrecognizedField: '這個 query 中存在未識別欄位 "{field}"，將被靜默忽略。',
+    chainUnrecognizedField: '這條鏈上存在未識別欄位 "{field}"，OpenFold3 會拒絕該鏈而非忽略。',
+    pocketConstraintUnrecognizedField:
+      '口袋約束裡存在未識別欄位 "{field}"，OpenFold3 會拒絕該約束而非忽略。',
     queryKeyEmpty: 'Query key 不能為空。',
     queryKeyDuplicate: 'Query key "{queryKey}" 重複。',
     queryNoChains: '這個 Query 還沒有任何鏈。',
@@ -169,18 +171,21 @@ export default {
     sequenceEmpty: '序列不能為空。',
     sequenceInvalidChars: '序列包含不允許的字元。',
     ligandMissingIdentifier: '請為該配體提供 SMILES 字串或 CCD 代碼。',
-    ligandSdfNotImplemented: 'OpenFold3 尚未實作 SDF 配體輸入——會在建構結構階段直接拋出 NotImplementedError。請改用 SMILES 或 CCD 代碼。',
+    ligandSdfNotImplemented:
+      'OpenFold3 尚未支援 SDF 配體輸入，建構結構時會報錯。請改用 SMILES 或 CCD 代碼。',
     ligandMultipleCcdNotImplemented:
-      'OpenFold3 尚不支援單條鏈填寫多個 CCD 代碼——會在建構結構階段直接拋出 NotImplementedError。請改為單一 CCD 代碼或使用 SMILES。',
+      'OpenFold3 尚不支援單條鏈填寫多個 CCD 代碼，建構結構時會報錯。請改為單一 CCD 代碼或使用 SMILES。',
     pocketLigandNotFound: '口袋約束裡的配體鏈 "{ligandId}" 在目前 Query 中不存在。',
     pocketLigandIdEmpty: '口袋約束需要選擇一條配體鏈。',
     pocketResiduesEmpty: '口袋約束至少需要一個口袋殘基。',
     pocketMaxDistanceInvalid: '最大距離必須是正數。',
     chainTemplateConflict: '一條鏈不能同時指定模板比對檔案和模板 CIF 檔案。',
     chainTemplateCifLengthMismatch:
-      '匯入的 JSON 裡 template_cif_chain_ids 的項目數和 template_cif_paths 不一致——部分列在匯入時可能已經錯位配對或被捨棄，請檢查下面的模板列。',
-    ligandIdentifierConflict: '匯入的 JSON 為該配體同時提供了 smiles/ccd_codes/sdf_file_path 中的多個欄位——只保留了其中一個，其餘在匯入時已被捨棄，請只保留一種。',
+      '匯入的 JSON 中 template_cif_chain_ids 與 template_cif_paths 項目數不一致，部分列可能已錯位或被捨棄，請檢查下方模板列。',
+    ligandIdentifierConflict:
+      '匯入的 JSON 為該配體提供了多個 smiles/ccd_codes/sdf_file_path 欄位，已只保留其中一個，請只保留一種。',
     nonCanonicalResidueOutOfRange: '殘基序號 {index} 超出了序列長度範圍。',
-    covalentBondsNoEffect: '目前版本的 OpenFold3 還沒有在下游消費 covalent_bonds 欄位——填寫不會報錯，但也不會對預測產生任何實際效果。',
+    covalentBondsNoEffect:
+      '目前版本 OpenFold3 尚未使用 covalent_bonds 欄位，填寫不會報錯，但對預測無實際效果。',
   },
 } as const
