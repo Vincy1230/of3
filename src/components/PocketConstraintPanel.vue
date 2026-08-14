@@ -27,6 +27,8 @@ const ligandChainOptions = computed(() => {
   return [...new Set(ids)]
 })
 
+const hasCustomValues = computed(() => !!activeQuery.value?.pocketConstraintEnabled)
+
 function toggle(enabled: boolean) {
   if (activeQuery.value) store.setPocketConstraintEnabled(activeQuery.value.uiId, enabled)
 }
@@ -40,7 +42,7 @@ function removeResidueRow(index: number) {
 </script>
 
 <template>
-  <CollapsibleSection v-if="activeQuery" :title="t('pocketConstraint.title')" default-collapsed>
+  <CollapsibleSection v-if="activeQuery" :title="t('pocketConstraint.title')" default-collapsed :has-custom-values="hasCustomValues">
     <span class="chip">{{ activeQuery.key }}</span>
 
     <label class="checkbox-field">

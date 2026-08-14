@@ -27,6 +27,7 @@ export default {
     reset: '重置',
     advanced: '高级选项',
     optional: '可选',
+    hasCustomValues: '包含非默认值',
   },
   presets: {
     title: '加载示例',

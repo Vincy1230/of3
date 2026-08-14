@@ -27,6 +27,7 @@ export default {
     reset: 'Reset',
     advanced: 'Advanced options',
     optional: 'optional',
+    hasCustomValues: 'Contains non-default values',
   },
   presets: {
     title: 'Load an example',

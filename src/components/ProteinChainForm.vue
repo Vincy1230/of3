@@ -3,6 +3,7 @@
   Email: vincy@vincy1230.net
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ChainDraft } from '@/types/draft'
 import CollapsibleSection from './CollapsibleSection.vue'
@@ -10,6 +11,15 @@ import IconTrash from './icons/IconTrash.vue'
 
 const props = defineProps<{ chain: ChainDraft }>()
 const { t } = useI18n()
+
+const hasCustomAdvancedValues = computed(
+  () =>
+    props.chain.mainMsaFilePaths.trim() !== '' ||
+    props.chain.pairedMsaFilePaths.trim() !== '' ||
+    props.chain.templateAlignmentFilePath.trim() !== '' ||
+    props.chain.templateCifRows.some((row) => row.path.trim() || row.chainId.trim()) ||
+    props.chain.nonCanonicalResidues.some((row) => row.index.trim() || row.code.trim()),
+)
 
 function addTemplateCifRow() {
   props.chain.templateCifRows.push({ path: '', chainId: '' })
@@ -39,7 +49,7 @@ function removeNonCanonicalRow(i: number) {
 
     <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
 
-    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed>
+    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed :has-custom-values="hasCustomAdvancedValues">
       <div class="field">
         <label>{{ t('chain.mainMsaPathsLabel') }}</label>
         <textarea v-model="chain.mainMsaFilePaths" rows="2"></textarea>

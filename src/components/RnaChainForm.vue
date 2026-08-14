@@ -3,12 +3,15 @@
   Email: vincy@vincy1230.net
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ChainDraft } from '@/types/draft'
 import CollapsibleSection from './CollapsibleSection.vue'
 
-defineProps<{ chain: ChainDraft }>()
+const props = defineProps<{ chain: ChainDraft }>()
 const { t } = useI18n()
+
+const hasCustomAdvancedValues = computed(() => props.chain.mainMsaFilePaths.trim() !== '')
 </script>
 
 <template>
@@ -21,7 +24,7 @@ const { t } = useI18n()
 
     <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
 
-    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed>
+    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed :has-custom-values="hasCustomAdvancedValues">
       <div class="field">
         <label>{{ t('chain.mainMsaPathsLabel') }}</label>
         <textarea v-model="chain.mainMsaFilePaths" rows="2"></textarea>
