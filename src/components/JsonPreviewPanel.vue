@@ -3,7 +3,7 @@
   Email: vincy@vincy1230.net
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import { highlightJson } from '@/utils/jsonHighlight'
@@ -23,20 +23,32 @@ const draftText = ref(jsonText.value)
 const parseError = ref<string | null>(null)
 const dirty = ref(false)
 let applyTimer: ReturnType<typeof setTimeout> | undefined
+// Set for the one store update that applyDraft() itself causes, so the watcher below doesn't
+// turn around and rewrite the textarea the user is typing in with the re-serialized form of what
+// they just typed (different formatting, key order left as-is, etc. would otherwise yank their
+// cursor). Store updates from anywhere else (a UI field edit, loading a preset, reset) are exactly
+// what should flow into the textarea, so those still go through untouched.
+let applyingFromDraft = false
 
 // Only follow store changes while the draft has no unapplied edits, so the
 // user's in-progress typing (or an unresolved parse error) is never clobbered.
 watch(jsonText, (value) => {
+  if (applyingFromDraft) return
   if (!dirty.value) draftText.value = value
 })
 
 function applyDraft() {
   clearTimeout(applyTimer)
   try {
+    applyingFromDraft = true
     store.loadFromJson(draftText.value)
     parseError.value = null
     dirty.value = false
+    void nextTick(() => {
+      applyingFromDraft = false
+    })
   } catch (err) {
+    applyingFromDraft = false
     parseError.value = err instanceof Error ? err.message : String(err)
   }
 }
