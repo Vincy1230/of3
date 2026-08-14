@@ -2,7 +2,8 @@
 // Email: vincy@vincy1230.net
 
 import { describe, expect, it } from 'vitest'
-import { parseOf3Input } from '@/utils/of3Draft'
+import { deserializeInput, parseOf3Input } from '@/utils/of3Draft'
+import { validateInput } from '@/utils/of3Validate'
 
 function minimalQueryJson(overrides: Record<string, unknown> = {}) {
   return JSON.stringify({
@@ -13,6 +14,13 @@ function minimalQueryJson(overrides: Record<string, unknown> = {}) {
     },
     ...overrides,
   })
+}
+
+/** Runs the same pipeline the app uses for a pasted/edited JSON: parse -> deserialize -> validate. */
+function importAndValidate(text: string) {
+  const { input } = parseOf3Input(text)
+  const state = deserializeInput(input)
+  return validateInput(state)
 }
 
 describe('parseOf3Input — unknown field handling', () => {
@@ -84,7 +92,7 @@ describe('parseOf3Input — unknown field handling', () => {
     expect(() => parseOf3Input(text)).not.toThrow()
   })
 
-  it('throws when a chain specifies both template_alignment_file_path and template_cif_paths', () => {
+  it('does not block on a chain specifying both template_alignment_file_path and template_cif_paths — validateInput flags it as content, not parseOf3Input as syntax', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
@@ -100,7 +108,9 @@ describe('parseOf3Input — unknown field handling', () => {
         },
       },
     })
-    expect(() => parseOf3Input(text)).toThrow(/cannot specify both/)
+    expect(() => parseOf3Input(text)).not.toThrow()
+    const issues = importAndValidate(text)
+    expect(issues.map((i) => i.code)).toContain('chain-template-conflict')
   })
 
   it('throws when template_cif_chain_ids length does not match template_cif_paths length', () => {
@@ -217,7 +227,7 @@ describe('parseOf3Input — unknown field handling', () => {
     expect(() => parseOf3Input(text)).toThrow(/unrecognized field "extra_threshold"/)
   })
 
-  it('throws when pocket_constraint has an empty ligand_chain_id', () => {
+  it('does not block on an empty pocket_constraint.ligand_chain_id — validateInput flags it as content', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
@@ -226,10 +236,12 @@ describe('parseOf3Input — unknown field handling', () => {
         },
       },
     })
-    expect(() => parseOf3Input(text)).toThrow(/non-empty "ligand_chain_id"/)
+    expect(() => parseOf3Input(text)).not.toThrow()
+    const issues = importAndValidate(text)
+    expect(issues.map((i) => i.code)).toContain('pocket-ligand-id-empty')
   })
 
-  it('throws when pocket_constraint has no pocket_residues', () => {
+  it('does not block on an empty pocket_constraint.pocket_residues — validateInput flags it as content', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
@@ -238,22 +250,27 @@ describe('parseOf3Input — unknown field handling', () => {
         },
       },
     })
-    expect(() => parseOf3Input(text)).toThrow(/at least one entry/)
+    expect(() => parseOf3Input(text)).not.toThrow()
+    const issues = importAndValidate(text)
+    expect(issues.map((i) => i.code)).toContain('pocket-residues-empty')
   })
 
-  it('throws when a pocket_residues entry is malformed', () => {
+  it('does not block on a malformed pocket_residues entry — it degrades to an effectively-blank residue, which validateInput flags as content', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
           chains: [{ molecule_type: 'ligand', chain_ids: 'L', smiles: 'CCO' }],
-          pocket_constraint: { ligand_chain_id: 'L', pocket_residues: [['A', 'not-a-number']] },
+          // Missing residue_id entirely (not just a bad type) — a genuinely incomplete pair.
+          pocket_constraint: { ligand_chain_id: 'L', pocket_residues: [['A']] },
         },
       },
     })
-    expect(() => parseOf3Input(text)).toThrow(/must be a \[chain_id, residue_id\] pair/)
+    expect(() => parseOf3Input(text)).not.toThrow()
+    const issues = importAndValidate(text)
+    expect(issues.map((i) => i.code)).toContain('pocket-residues-empty')
   })
 
-  it('throws when pocket_constraint max_distance is not positive', () => {
+  it('does not block on a non-positive pocket_constraint.max_distance — validateInput flags it as content', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
@@ -262,6 +279,8 @@ describe('parseOf3Input — unknown field handling', () => {
         },
       },
     })
-    expect(() => parseOf3Input(text)).toThrow(/must be a positive number/)
+    expect(() => parseOf3Input(text)).not.toThrow()
+    const issues = importAndValidate(text)
+    expect(issues.map((i) => i.code)).toContain('pocket-max-distance-invalid')
   })
 })

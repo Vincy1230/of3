@@ -108,9 +108,13 @@ export function createEmptyQuery(key: string): QueryDraft {
   }
 }
 
+// Accepts `unknown` at runtime, not just the declared `string | string[] | undefined`, because
+// callers ultimately feed it fields lifted straight out of parsed JSON that parseOf3Input no
+// longer type-checks for content (see queryFromSpec/chainFromSpec) — it must degrade to '' for
+// anything unexpected rather than crash.
 function toRawList(value: string | string[] | undefined): string {
-  if (value === undefined) return ''
-  return Array.isArray(value) ? value.join(', ') : value
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string').join(', ')
+  return typeof value === 'string' ? value : ''
 }
 
 function chainFromSpec(chain: Chain): ChainDraft {
@@ -177,12 +181,21 @@ function queryFromSpec(key: string, query: Of3Query): QueryDraft {
   }
   draft.pocketConstraintEnabled = !!query.pocket_constraint
   if (query.pocket_constraint) {
+    // pocket_constraint's content validity (blank ligand_chain_id, empty/malformed
+    // pocket_residues) is intentionally NOT checked in parseOf3Input — validateInput catches it
+    // on the draft instead, the same way it would for a hand-built pocket constraint. So this
+    // has to tolerate whatever shape the pasted JSON actually had, not just the shape the Of3Query
+    // type promises, without throwing.
+    const rawResidues = Array.isArray(query.pocket_constraint.pocket_residues) ? query.pocket_constraint.pocket_residues : []
     draft.pocketConstraint = {
-      ligandChainId: query.pocket_constraint.ligand_chain_id,
-      residues: query.pocket_constraint.pocket_residues.map(([chainId, residueId]) => ({
-        chainId,
-        residueId: String(residueId),
-      })),
+      ligandChainId: typeof query.pocket_constraint.ligand_chain_id === 'string' ? query.pocket_constraint.ligand_chain_id : '',
+      residues: rawResidues.map((entry) => {
+        const [chainId, residueId] = Array.isArray(entry) ? entry : []
+        return {
+          chainId: typeof chainId === 'string' ? chainId : '',
+          residueId: residueId !== undefined && residueId !== null ? String(residueId) : '',
+        }
+      }),
       maxDistance: query.pocket_constraint.max_distance !== undefined ? String(query.pocket_constraint.max_distance) : '',
     }
   }
@@ -195,10 +208,21 @@ export function deserializeInput(input: Of3Input): Pick<BuilderState, 'queries'>
 }
 
 /**
- * Parses and structurally validates raw JSON text pasted/typed by the user before it is
- * deserialized into form state. Unknown fields are handled the way real OpenFold3 handles them:
- * silently-ignored ones (root, query) come back as warnings and don't block the import; rejected
- * ones (chain, pocket_constraint) throw, since OpenFold3 would refuse the input outright.
+ * Parses raw JSON text pasted/typed by the user and structurally validates it before it is
+ * deserialized into form state. This function's job stops at "is this a well-formed, schema-valid
+ * OpenFold3 input JSON" — JSON.parse failures, wrong shapes (object/array/type mismatches that
+ * would make deserializeInput crash or misroute), invalid molecule_type, and fields OpenFold3
+ * itself wouldn't recognize (unknown fields at root/query come back as warnings, matching
+ * extra="ignore"; unknown fields on chain/pocket_constraint throw, matching extra="forbid").
+ *
+ * It deliberately does NOT duplicate content/business-logic checks that validateInput (of3Validate.ts)
+ * already covers on the deserialized draft — e.g. an empty pocket_residues list, a blank
+ * ligand_chain_id, or a non-positive max_distance parse here without complaint and surface as
+ * ordinary (non-blocking) issues in the validation panel once imported, exactly as they would if
+ * built by hand through the form. The couple of exceptions below are structural: once
+ * deserializeInput merges/dedupes the raw fields into draft state, the specific problem becomes
+ * unrecoverable — there's no way for validateInput to tell "the pasted JSON had conflicting
+ * fields" from "the user only ever entered one", so those cases must be caught here instead.
  */
 export function parseOf3Input(text: string): ParsedOf3Input {
   let parsed: unknown
@@ -258,12 +282,17 @@ export function parseOf3Input(text: string): ParsedOf3Input {
         }
       }
 
+      // template_alignment_file_path + template_cif_paths both present: NOT checked here on
+      // purpose. deserializeInput keeps both raw values in the draft (templateAlignmentFilePath /
+      // templateCifRows), so validateInput's 'chain-template-conflict' can — and does — catch this
+      // after import exactly like it does for a hand-built chain. No content-check duplication here.
+
       const chainLabel = `Query "${queryKey}", chain #${index + 1}`
-      if (chainObj.template_alignment_file_path !== undefined && chainObj.template_cif_paths !== undefined) {
-        throw new Error(
-          `${chainLabel}: cannot specify both "template_alignment_file_path" and "template_cif_paths" — OpenFold3 rejects this.`,
-        )
-      }
+      // template_cif_chain_ids pairing/length: MUST stay here. deserializeInput zips paths and
+      // chain ids into one array of {path, chainId} rows — once that merge happens, a length
+      // mismatch is indistinguishable from the user having legitimately left some chain ids blank,
+      // so validateInput has nothing left to inspect. This is a real structural loss, not a
+      // duplicated content check.
       if (chainObj.template_cif_chain_ids !== undefined) {
         if (chainObj.template_cif_paths === undefined) {
           throw new Error(
@@ -278,6 +307,9 @@ export function parseOf3Input(text: string): ParsedOf3Input {
           )
         }
       }
+      // smiles/ccd_codes/sdf_file_path mutual exclusivity: MUST stay here for the same reason —
+      // chainFromSpec picks one identifier by priority order when deserializing, silently dropping
+      // the others, so by the time validateInput runs there's no trace that more than one was given.
       const identifierFields = ['smiles', 'ccd_codes', 'sdf_file_path'].filter((field) => chainObj[field] !== undefined)
       if (identifierFields.length > 1) {
         throw new Error(
@@ -322,28 +354,12 @@ export function parseOf3Input(text: string): ParsedOf3Input {
           )
         }
       }
-      if (typeof pocketObj.ligand_chain_id !== 'string' || pocketObj.ligand_chain_id.trim() === '') {
-        throw new Error(`${pocketLabel} needs a non-empty "ligand_chain_id" — OpenFold3 requires this field.`)
-      }
-      const pocketResidues = pocketObj.pocket_residues
-      if (!Array.isArray(pocketResidues) || pocketResidues.length === 0) {
-        throw new Error(`${pocketLabel} needs at least one entry in "pocket_residues" — OpenFold3 rejects an empty list.`)
-      }
-      pocketResidues.forEach((residue, i) => {
-        if (
-          !Array.isArray(residue) ||
-          residue.length !== 2 ||
-          typeof residue[0] !== 'string' ||
-          typeof residue[1] !== 'number'
-        ) {
-          throw new Error(
-            `${pocketLabel}: "pocket_residues" entry #${i + 1} must be a [chain_id, residue_id] pair (string, number).`,
-          )
-        }
-      })
-      if (pocketObj.max_distance !== undefined && (typeof pocketObj.max_distance !== 'number' || pocketObj.max_distance <= 0)) {
-        throw new Error(`${pocketLabel}: "max_distance" must be a positive number — OpenFold3 rejects this.`)
-      }
+      // A blank/missing ligand_chain_id, an empty/wrongly-typed/malformed pocket_residues list, and
+      // a non-positive max_distance are all content problems, not shape problems: none of them
+      // would make deserializeInput crash (queryFromSpec defensively coerces bad values to safe
+      // defaults), and validateInput's 'pocket-ligand-id-empty' / 'pocket-residues-empty' /
+      // 'pocket-max-distance-invalid' already catch them on the resulting draft — the same way they
+      // would if the user built an incomplete pocket constraint by hand through the form.
     }
   }
 
