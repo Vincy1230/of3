@@ -124,8 +124,7 @@ describe('serializeInput', () => {
         },
       },
     })
-    const { input } = parseOf3Input(text)
-    const draftState = deserializeInput(input)
+    const draftState = deserializeInput(parseOf3Input(text))
 
     // Simulate a UI edit that only touches "sequence" — same as ProteinChainForm's v-model would.
     draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
@@ -157,9 +156,8 @@ describe('serializeInput', () => {
         },
       },
     })
-    const { input, warnings } = parseOf3Input(text)
-    expect(warnings).toEqual([{ path: 'root', key: 'ccd_file_path' }])
-    const draftState = deserializeInput(input)
+    const draftState = deserializeInput(parseOf3Input(text))
+    expect(draftState.rootRaw.unrecognized).toEqual(['ccd_file_path'])
 
     // Unrelated edit, same as above.
     draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'

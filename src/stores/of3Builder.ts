@@ -6,9 +6,8 @@ import { defineStore } from 'pinia'
 import type { MoleculeType } from '@/types/of3'
 import type { ChainDraft, QueryDraft } from '@/types/draft'
 import { createEmptyChain, createEmptyQuery, createId, deserializeInput, emptyRaw, parseOf3Input } from '@/utils/of3Draft'
-import type { UnknownFieldWarning } from '@/utils/of3Draft'
 import { serializeInput } from '@/utils/of3Serialize'
-import { validateInput } from '@/utils/of3Validate'
+import { validateInput, type Issue } from '@/utils/of3Validate'
 import { OF3_EXAMPLES } from '@/data/examples'
 
 function nextQueryKey(queries: QueryDraft[]): string {
@@ -22,15 +21,19 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
   const initialQuery = createEmptyQuery('query_1')
   const queries = ref<QueryDraft[]>([initialQuery])
   const activeQueryUiId = ref<string | null>(initialQuery.uiId)
-  const importWarnings = ref<UnknownFieldWarning[]>([])
   const rootRaw = ref(emptyRaw())
+  // Structural problems (invalid shapes, dropped chains/queries) found the last time JSON text was
+  // parsed — merged with validateInput's live content issues into one `issues` list. See
+  // of3Draft.ts's DeserializeResult and the parseOf3Input doc comment for why these aren't
+  // exceptions: the JSON panel only ever blocks on invalid JSON syntax now.
+  const importIssues = ref<Issue[]>([])
 
   const activeQuery = computed<QueryDraft | null>(
     () => queries.value.find((q) => q.uiId === activeQueryUiId.value) ?? null,
   )
 
   const output = computed(() => serializeInput({ queries: queries.value, rootRaw: rootRaw.value }))
-  const issues = computed(() => validateInput({ queries: queries.value }))
+  const issues = computed(() => [...importIssues.value, ...validateInput({ queries: queries.value, rootRaw: rootRaw.value })])
 
   function setActiveQuery(uiId: string) {
     if (queries.value.some((q) => q.uiId === uiId)) activeQueryUiId.value = uiId
@@ -106,45 +109,42 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     const state = deserializeInput(example.input)
     queries.value = state.queries
     rootRaw.value = state.rootRaw
+    importIssues.value = []
     activeQueryUiId.value = queries.value[0]?.uiId ?? null
   }
 
   /**
-   * Parses raw JSON text and syncs it into form state. Throws on invalid input, leaving state
-   * untouched. Reconciles against the current queries (matched by query key, then chains by
-   * index) so a small edit updates the existing draft objects in place rather than replacing them
-   * wholesale — that's what keeps the sidebar's current selection, and anything else holding a
-   * direct reference to a query/chain (e.g. an open chain editor), pointed at the right object
-   * instead of a stale one after every keystroke.
+   * Parses raw JSON text and syncs it into form state. Throws only on literal invalid JSON syntax
+   * (a JSON.parse failure), leaving state untouched — everything else about the content is
+   * reported through `issues` instead, never blocking. Reconciles against the current queries
+   * (matched by query key, then chains by index) so a small edit updates the existing draft
+   * objects in place rather than replacing them wholesale — that's what keeps the sidebar's
+   * current selection, and anything else holding a direct reference to a query/chain (e.g. an open
+   * chain editor), pointed at the right object instead of a stale one after every keystroke.
    */
   function loadFromJson(text: string) {
-    const { input, warnings } = parseOf3Input(text)
-    const state = deserializeInput(input, queries.value)
+    const parsed = parseOf3Input(text)
+    const state = deserializeInput(parsed, queries.value)
     queries.value = state.queries
     rootRaw.value = state.rootRaw
+    importIssues.value = state.issues
     activeQueryUiId.value = queries.value.some((q) => q.uiId === activeQueryUiId.value)
       ? activeQueryUiId.value
       : (queries.value[0]?.uiId ?? null)
-    importWarnings.value = warnings
-  }
-
-  function clearImportWarnings() {
-    importWarnings.value = []
   }
 
   function reset() {
     const query = createEmptyQuery('query_1')
     queries.value = [query]
     rootRaw.value = emptyRaw()
+    importIssues.value = []
     activeQueryUiId.value = query.uiId
-    importWarnings.value = []
   }
 
   return {
     queries,
     activeQueryUiId,
     activeQuery,
-    importWarnings,
     output,
     issues,
     setActiveQuery,
@@ -159,7 +159,6 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     setQueryMsaOptions,
     loadExample,
     loadFromJson,
-    clearImportWarnings,
     reset,
     createId,
   }

@@ -1,9 +1,28 @@
 // Author: Vincy SHI
 // Email: vincy@vincy1230.net
 
-import type { BuilderState, ChainDraft, QueryDraft } from '@/types/draft'
+import type { ChainDraft, QueryDraft, RawShape } from '@/types/draft'
 
 export type IssueCode =
+  // Structural problems found while turning parsed JSON into form state (see of3Draft.ts). These
+  // used to be blocking parse-time exceptions; now nothing but literal invalid JSON syntax blocks
+  // the JSON panel — everything else, including these, is reported here instead.
+  | 'root-not-object'
+  | 'queries-invalid'
+  | 'queries-empty'
+  | 'query-not-object'
+  | 'query-chains-invalid'
+  | 'chain-not-object'
+  | 'chain-molecule-type-invalid'
+  // Fields OpenFold3's own schema doesn't declare at all (as opposed to ones this app just has no
+  // form control for, which stay silent — see RawShape). Root/query mirror OpenFold3's
+  // `extra="ignore"`, so these are warnings; chain/pocket_constraint mirror `extra="forbid"`, so
+  // OpenFold3 would reject the whole file over these — errors.
+  | 'root-unrecognized-field'
+  | 'root-seeds-field'
+  | 'query-unrecognized-field'
+  | 'chain-unrecognized-field'
+  | 'pocket-constraint-unrecognized-field'
   | 'query-key-empty'
   | 'query-key-duplicate'
   | 'query-no-chains'
@@ -19,14 +38,17 @@ export type IssueCode =
   | 'pocket-residues-empty'
   | 'pocket-max-distance-invalid'
   | 'chain-template-conflict'
+  | 'chain-template-cif-length-mismatch'
+  | 'ligand-identifier-conflict'
   | 'non-canonical-residue-out-of-range'
   | 'covalent-bonds-no-effect'
 
 export interface Issue {
   level: 'error' | 'warning'
   code: IssueCode
-  queryUiId: string
-  queryKey: string
+  /** Absent for root-level issues (e.g. a stray root field, or the JSON root not being an object at all). */
+  queryUiId?: string
+  queryKey?: string
   chainUiId?: string
   chainLabel?: string
   params?: Record<string, string | number>
@@ -48,6 +70,18 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   const ids = parseList(chain.chainIds)
   const label = ids.join(',') || undefined
 
+  for (const field of chain.raw.unrecognized) {
+    issues.push({
+      level: 'error',
+      code: 'chain-unrecognized-field',
+      queryUiId: query.uiId,
+      queryKey: key,
+      chainUiId: chain.uiId,
+      chainLabel: label,
+      params: { field },
+    })
+  }
+
   if (ids.length === 0) {
     issues.push({ level: 'error', code: 'chain-ids-empty', queryUiId: query.uiId, queryKey: key, chainUiId: chain.uiId })
   }
@@ -67,6 +101,17 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   }
 
   if (chain.moleculeType === 'ligand') {
+    if (chain.ligandIdentifierConflict) {
+      issues.push({
+        level: 'error',
+        code: 'ligand-identifier-conflict',
+        queryUiId: query.uiId,
+        queryKey: key,
+        chainUiId: chain.uiId,
+        chainLabel: label,
+      })
+    }
+
     const hasSmiles = chain.ligandMode === 'smiles' && chain.smiles.trim().length > 0
     const hasCcd = chain.ligandMode === 'ccd' && parseList(chain.ccdCodes).length > 0
     const hasSdf = chain.ligandMode === 'sdf' && chain.sdfFilePath.trim().length > 0
@@ -138,6 +183,16 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
         chainLabel: label,
       })
     }
+    if (chain.templateCifLengthMismatch) {
+      issues.push({
+        level: 'error',
+        code: 'chain-template-cif-length-mismatch',
+        queryUiId: query.uiId,
+        queryKey: key,
+        chainUiId: chain.uiId,
+        chainLabel: label,
+      })
+    }
 
     const seqLen = sequence.length
     for (const row of chain.nonCanonicalResidues) {
@@ -163,6 +218,10 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
 function validateQuery(query: QueryDraft, issues: Issue[]): void {
   const key = query.key.trim()
 
+  for (const field of query.raw.unrecognized) {
+    issues.push({ level: 'warning', code: 'query-unrecognized-field', queryUiId: query.uiId, queryKey: key, params: { field } })
+  }
+
   if (query.chains.length === 0) {
     issues.push({ level: 'error', code: 'query-no-chains', queryUiId: query.uiId, queryKey: key })
     return
@@ -186,6 +245,10 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
   }
 
   if (query.pocketConstraintEnabled) {
+    for (const field of query.pocketConstraint.raw.unrecognized) {
+      issues.push({ level: 'error', code: 'pocket-constraint-unrecognized-field', queryUiId: query.uiId, queryKey: key, params: { field } })
+    }
+
     const ligandId = query.pocketConstraint.ligandChainId.trim()
     if (!ligandId) {
       issues.push({ level: 'error', code: 'pocket-ligand-id-empty', queryUiId: query.uiId, queryKey: key })
@@ -213,8 +276,17 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
   }
 }
 
-export function validateInput(state: Pick<BuilderState, 'queries'>): Issue[] {
+export function validateInput(state: { queries: QueryDraft[]; rootRaw?: RawShape }): Issue[] {
   const issues: Issue[] = []
+
+  for (const field of state.rootRaw?.unrecognized ?? []) {
+    if (field === 'seeds') {
+      issues.push({ level: 'warning', code: 'root-seeds-field' })
+    } else {
+      issues.push({ level: 'warning', code: 'root-unrecognized-field', params: { field } })
+    }
+  }
+
   const usedKeys = new Set<string>()
 
   for (const query of state.queries) {

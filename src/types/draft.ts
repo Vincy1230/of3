@@ -13,6 +13,14 @@ import type { MoleculeType } from './of3'
 export interface RawShape {
   order: string[]
   extras: Record<string, unknown>
+  /**
+   * Keys in `extras` that OpenFold3's own schema doesn't declare at all — as opposed to keys this
+   * app just doesn't have a form control for (query_name, template_entry_chain_ids, ...), which
+   * stay silent. validateInput turns these into live issues (warning at root/query level, since
+   * OpenFold3 ignores them there; error at chain/pocket_constraint level, since OpenFold3 rejects
+   * the whole file over them) — never a blocking parse-time exception.
+   */
+  unrecognized: string[]
 }
 
 export interface NonCanonicalResidueRow {
@@ -48,6 +56,19 @@ export interface ChainDraft {
   nonCanonicalResidues: NonCanonicalResidueRow[]
   /** Protein/RNA/DNA only: marks the chain as a head-to-tail cyclic polymer. */
   cyclic: boolean
+  /**
+   * Set when the imported JSON gave more than one of smiles/ccd_codes/sdf_file_path for this
+   * ligand — only one survives into the fields above (the others are silently dropped, since this
+   * app can only represent one at a time), so validateInput needs this to flag the loss; by the
+   * time the draft exists there's no other trace that more than one was ever given.
+   */
+  ligandIdentifierConflict: boolean
+  /**
+   * Set when the imported JSON's template_cif_chain_ids length didn't match template_cif_paths —
+   * they get zipped into templateCifRows above regardless (extra/missing ids silently become ''),
+   * so this is the only remaining trace that the source was inconsistent.
+   */
+  templateCifLengthMismatch: boolean
   raw: RawShape
 }
 

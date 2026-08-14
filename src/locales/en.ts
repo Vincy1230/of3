@@ -139,9 +139,6 @@ export default {
     previewMode: 'Preview',
     editMode: 'Edit',
     parseError: 'Failed to parse JSON: {message}',
-    unknownFieldIgnored: 'Unrecognized field "{key}" at {path} — OpenFold3 silently ignores it rather than using it.',
-    seedsFieldWarning:
-      '"seeds" isn\'t meant to be set here — the docs say OpenFold3 only reads it back from the output query set, not from your input JSON. Use the --num-model-seeds CLI flag or runner.yml to control seeds instead.',
   },
   validation: {
     title: 'Validation',
@@ -150,6 +147,20 @@ export default {
     warningLabel: 'Warning',
     context: 'Query "{queryKey}"',
     contextChain: 'Query "{queryKey}" / chain "{chainLabel}"',
+    'root-not-object': 'The JSON root must be an object with a "queries" field.',
+    'queries-invalid': '"queries" must be an object mapping query keys to query objects.',
+    'queries-empty': '"queries" doesn\'t contain any queries yet.',
+    'query-not-object': 'This query must be an object.',
+    'query-chains-invalid': 'This query is missing a "chains" array.',
+    'chain-not-object': 'Chain #{index} must be an object.',
+    'chain-molecule-type-invalid': 'Chain #{index} has a missing or invalid "molecule_type" (expected protein, rna, dna, or ligand).',
+    'root-unrecognized-field': 'Unrecognized field "{field}" at the JSON root — OpenFold3 silently ignores it rather than using it.',
+    'root-seeds-field':
+      '"seeds" isn\'t meant to be set here — the docs say OpenFold3 only reads it back from the output query set, not from your input JSON. Use the --num-model-seeds CLI flag or runner.yml to control seeds instead.',
+    'query-unrecognized-field': 'Unrecognized field "{field}" in this query — OpenFold3 silently ignores it rather than using it.',
+    'chain-unrecognized-field': 'Unrecognized field "{field}" on this chain — OpenFold3 rejects unknown chain fields instead of ignoring them.',
+    'pocket-constraint-unrecognized-field':
+      'Unrecognized field "{field}" in this pocket constraint — OpenFold3 rejects unknown fields there instead of ignoring them.',
     'query-key-empty': 'Query key cannot be empty.',
     'query-key-duplicate': 'Query key "{queryKey}" is used more than once.',
     'query-no-chains': 'This query has no chains yet.',
@@ -167,6 +178,10 @@ export default {
     'pocket-residues-empty': 'Pocket constraint needs at least one pocket residue.',
     'pocket-max-distance-invalid': 'Max distance must be a positive number.',
     'chain-template-conflict': 'A chain cannot specify both a template alignment file and template CIF files.',
+    'chain-template-cif-length-mismatch':
+      "The imported JSON's template_cif_chain_ids didn't have as many entries as template_cif_paths — some rows may have been paired up wrong or dropped on import. Check the template rows below.",
+    'ligand-identifier-conflict':
+      'The imported JSON gave more than one of smiles/ccd_codes/sdf_file_path for this ligand — only one was kept, the rest were dropped on import. Provide just one.',
     'non-canonical-residue-out-of-range': 'Residue index {index} is outside the sequence length.',
     'covalent-bonds-no-effect':
       "The current OpenFold3 release doesn't consume covalent_bonds downstream — it parses without error, but has no effect on the prediction.",

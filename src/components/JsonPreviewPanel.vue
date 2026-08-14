@@ -8,15 +8,9 @@ import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import { highlightJson } from '@/utils/jsonHighlight'
 import SegmentedControl from '@/components/SegmentedControl.vue'
-import type { UnknownFieldWarning } from '@/utils/of3Draft'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
-
-function warningMessage(warning: UnknownFieldWarning): string {
-  if (warning.reason === 'seeds') return t('jsonPreview.seedsFieldWarning')
-  return t('jsonPreview.unknownFieldIgnored', { key: warning.key, path: warning.path })
-}
 
 const jsonText = computed(() => JSON.stringify(store.output, null, 2))
 const highlighted = computed(() => highlightJson(jsonText.value))
@@ -43,7 +37,6 @@ function applyDraft() {
     dirty.value = false
   } catch (err) {
     parseError.value = err instanceof Error ? err.message : String(err)
-    store.clearImportWarnings()
   }
 }
 
@@ -135,11 +128,6 @@ function resetAll() {
       <p v-if="parseError" class="hint json-error">
         {{ t('jsonPreview.parseError', { message: parseError }) }}
       </p>
-      <ul v-else-if="store.importWarnings.length > 0" class="hint json-warning-list">
-        <li v-for="(warning, index) in store.importWarnings" :key="index">
-          {{ warningMessage(warning) }}
-        </li>
-      </ul>
     </template>
     <pre v-else class="json-view"><code v-html="highlighted"></code></pre>
   </section>
@@ -226,13 +214,6 @@ function resetAll() {
   flex-shrink: 0;
   margin: 0;
   color: var(--color-danger);
-}
-
-.json-warning-list {
-  flex-shrink: 0;
-  margin: 0;
-  padding-left: 1.1rem;
-  color: var(--color-active);
 }
 
 .json-view code {
