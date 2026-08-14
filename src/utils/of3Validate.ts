@@ -7,41 +7,41 @@ export type IssueCode =
   // Structural problems found while turning parsed JSON into form state (see of3Draft.ts). These
   // used to be blocking parse-time exceptions; now nothing but literal invalid JSON syntax blocks
   // the JSON panel — everything else, including these, is reported here instead.
-  | 'root-not-object'
-  | 'queries-invalid'
-  | 'queries-empty'
-  | 'query-not-object'
-  | 'query-chains-invalid'
-  | 'chain-not-object'
-  | 'chain-molecule-type-invalid'
+  | 'rootNotObject'
+  | 'queriesInvalid'
+  | 'queriesEmpty'
+  | 'queryNotObject'
+  | 'queryChainsInvalid'
+  | 'chainNotObject'
+  | 'chainMoleculeTypeInvalid'
   // Fields OpenFold3's own schema doesn't declare at all (as opposed to ones this app just has no
   // form control for, which stay silent — see RawShape). Root/query mirror OpenFold3's
   // `extra="ignore"`, so these are warnings; chain/pocket_constraint mirror `extra="forbid"`, so
   // OpenFold3 would reject the whole file over these — errors.
-  | 'root-unrecognized-field'
-  | 'root-seeds-field'
-  | 'query-unrecognized-field'
-  | 'chain-unrecognized-field'
-  | 'pocket-constraint-unrecognized-field'
-  | 'query-key-empty'
-  | 'query-key-duplicate'
-  | 'query-no-chains'
-  | 'chain-ids-empty'
-  | 'chain-ids-duplicate'
-  | 'sequence-empty'
-  | 'sequence-invalid-chars'
-  | 'ligand-missing-identifier'
-  | 'ligand-sdf-not-implemented'
-  | 'ligand-multiple-ccd-not-implemented'
-  | 'pocket-ligand-not-found'
-  | 'pocket-ligand-id-empty'
-  | 'pocket-residues-empty'
-  | 'pocket-max-distance-invalid'
-  | 'chain-template-conflict'
-  | 'chain-template-cif-length-mismatch'
-  | 'ligand-identifier-conflict'
-  | 'non-canonical-residue-out-of-range'
-  | 'covalent-bonds-no-effect'
+  | 'rootUnrecognizedField'
+  | 'rootSeedsField'
+  | 'queryUnrecognizedField'
+  | 'chainUnrecognizedField'
+  | 'pocketConstraintUnrecognizedField'
+  | 'queryKeyEmpty'
+  | 'queryKeyDuplicate'
+  | 'queryNoChains'
+  | 'chainIdsEmpty'
+  | 'chainIdsDuplicate'
+  | 'sequenceEmpty'
+  | 'sequenceInvalidChars'
+  | 'ligandMissingIdentifier'
+  | 'ligandSdfNotImplemented'
+  | 'ligandMultipleCcdNotImplemented'
+  | 'pocketLigandNotFound'
+  | 'pocketLigandIdEmpty'
+  | 'pocketResiduesEmpty'
+  | 'pocketMaxDistanceInvalid'
+  | 'chainTemplateConflict'
+  | 'chainTemplateCifLengthMismatch'
+  | 'ligandIdentifierConflict'
+  | 'nonCanonicalResidueOutOfRange'
+  | 'covalentBondsNoEffect'
 
 export interface Issue {
   level: 'error' | 'warning'
@@ -73,7 +73,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   for (const field of chain.raw.unrecognized) {
     issues.push({
       level: 'error',
-      code: 'chain-unrecognized-field',
+      code: 'chainUnrecognizedField',
       queryUiId: query.uiId,
       queryKey: key,
       chainUiId: chain.uiId,
@@ -83,13 +83,13 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   }
 
   if (ids.length === 0) {
-    issues.push({ level: 'error', code: 'chain-ids-empty', queryUiId: query.uiId, queryKey: key, chainUiId: chain.uiId })
+    issues.push({ level: 'error', code: 'chainIdsEmpty', queryUiId: query.uiId, queryKey: key, chainUiId: chain.uiId })
   }
   for (const id of ids) {
     if (seenChainIds.has(id)) {
       issues.push({
         level: 'error',
-        code: 'chain-ids-duplicate',
+        code: 'chainIdsDuplicate',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -104,7 +104,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (chain.ligandIdentifierConflict) {
       issues.push({
         level: 'error',
-        code: 'ligand-identifier-conflict',
+        code: 'ligandIdentifierConflict',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -118,7 +118,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (!hasSmiles && !hasCcd && !hasSdf) {
       issues.push({
         level: 'error',
-        code: 'ligand-missing-identifier',
+        code: 'ligandMissingIdentifier',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -128,7 +128,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (hasSdf) {
       issues.push({
         level: 'error',
-        code: 'ligand-sdf-not-implemented',
+        code: 'ligandSdfNotImplemented',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -138,7 +138,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (hasCcd && parseList(chain.ccdCodes).length > 1) {
       issues.push({
         level: 'error',
-        code: 'ligand-multiple-ccd-not-implemented',
+        code: 'ligandMultipleCcdNotImplemented',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -152,7 +152,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   if (!sequence) {
     issues.push({
       level: 'error',
-      code: 'sequence-empty',
+      code: 'sequenceEmpty',
       queryUiId: query.uiId,
       queryKey: key,
       chainUiId: chain.uiId,
@@ -163,7 +163,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (!pattern.test(sequence)) {
       issues.push({
         level: 'error',
-        code: 'sequence-invalid-chars',
+        code: 'sequenceInvalidChars',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -176,7 +176,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (chain.templateAlignmentFilePath.trim() && chain.templateCifRows.some((row) => row.path.trim())) {
       issues.push({
         level: 'error',
-        code: 'chain-template-conflict',
+        code: 'chainTemplateConflict',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -186,7 +186,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
     if (chain.templateCifLengthMismatch) {
       issues.push({
         level: 'error',
-        code: 'chain-template-cif-length-mismatch',
+        code: 'chainTemplateCifLengthMismatch',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -201,7 +201,7 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
       if (!Number.isInteger(idx) || idx < 1 || idx > seqLen) {
         issues.push({
           level: 'warning',
-          code: 'non-canonical-residue-out-of-range',
+          code: 'nonCanonicalResidueOutOfRange',
           queryUiId: query.uiId,
           queryKey: key,
           chainUiId: chain.uiId,
@@ -219,11 +219,11 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
   const key = query.key.trim()
 
   for (const field of query.raw.unrecognized) {
-    issues.push({ level: 'warning', code: 'query-unrecognized-field', queryUiId: query.uiId, queryKey: key, params: { field } })
+    issues.push({ level: 'warning', code: 'queryUnrecognizedField', queryUiId: query.uiId, queryKey: key, params: { field } })
   }
 
   if (query.chains.length === 0) {
-    issues.push({ level: 'error', code: 'query-no-chains', queryUiId: query.uiId, queryKey: key })
+    issues.push({ level: 'error', code: 'queryNoChains', queryUiId: query.uiId, queryKey: key })
     return
   }
 
@@ -241,21 +241,21 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
     (row) => row.chain1.trim() && row.residue1.trim() && row.atom1.trim() && row.chain2.trim() && row.residue2.trim() && row.atom2.trim(),
   )
   if (hasCovalentBond) {
-    issues.push({ level: 'warning', code: 'covalent-bonds-no-effect', queryUiId: query.uiId, queryKey: key })
+    issues.push({ level: 'warning', code: 'covalentBondsNoEffect', queryUiId: query.uiId, queryKey: key })
   }
 
   if (query.pocketConstraintEnabled) {
     for (const field of query.pocketConstraint.raw.unrecognized) {
-      issues.push({ level: 'error', code: 'pocket-constraint-unrecognized-field', queryUiId: query.uiId, queryKey: key, params: { field } })
+      issues.push({ level: 'error', code: 'pocketConstraintUnrecognizedField', queryUiId: query.uiId, queryKey: key, params: { field } })
     }
 
     const ligandId = query.pocketConstraint.ligandChainId.trim()
     if (!ligandId) {
-      issues.push({ level: 'error', code: 'pocket-ligand-id-empty', queryUiId: query.uiId, queryKey: key })
+      issues.push({ level: 'error', code: 'pocketLigandIdEmpty', queryUiId: query.uiId, queryKey: key })
     } else if (!ligandChainIdSet.has(ligandId)) {
       issues.push({
         level: 'error',
-        code: 'pocket-ligand-not-found',
+        code: 'pocketLigandNotFound',
         queryUiId: query.uiId,
         queryKey: key,
         params: { ligandId },
@@ -263,14 +263,14 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
     }
     const residues = query.pocketConstraint.residues.filter((row) => row.chainId.trim() && row.residueId.trim())
     if (residues.length === 0) {
-      issues.push({ level: 'error', code: 'pocket-residues-empty', queryUiId: query.uiId, queryKey: key })
+      issues.push({ level: 'error', code: 'pocketResiduesEmpty', queryUiId: query.uiId, queryKey: key })
     }
 
     const maxDistanceRaw = query.pocketConstraint.maxDistance.trim()
     if (maxDistanceRaw) {
       const maxDistance = Number(maxDistanceRaw)
       if (Number.isNaN(maxDistance) || maxDistance <= 0) {
-        issues.push({ level: 'error', code: 'pocket-max-distance-invalid', queryUiId: query.uiId, queryKey: key })
+        issues.push({ level: 'error', code: 'pocketMaxDistanceInvalid', queryUiId: query.uiId, queryKey: key })
       }
     }
   }
@@ -281,9 +281,9 @@ export function validateInput(state: { queries: QueryDraft[]; rootRaw?: RawShape
 
   for (const field of state.rootRaw?.unrecognized ?? []) {
     if (field === 'seeds') {
-      issues.push({ level: 'warning', code: 'root-seeds-field' })
+      issues.push({ level: 'warning', code: 'rootSeedsField' })
     } else {
-      issues.push({ level: 'warning', code: 'root-unrecognized-field', params: { field } })
+      issues.push({ level: 'warning', code: 'rootUnrecognizedField', params: { field } })
     }
   }
 
@@ -292,9 +292,9 @@ export function validateInput(state: { queries: QueryDraft[]; rootRaw?: RawShape
   for (const query of state.queries) {
     const key = query.key.trim()
     if (!key) {
-      issues.push({ level: 'error', code: 'query-key-empty', queryUiId: query.uiId, queryKey: query.key })
+      issues.push({ level: 'error', code: 'queryKeyEmpty', queryUiId: query.uiId, queryKey: query.key })
     } else if (usedKeys.has(key)) {
-      issues.push({ level: 'error', code: 'query-key-duplicate', queryUiId: query.uiId, queryKey: key })
+      issues.push({ level: 'error', code: 'queryKeyDuplicate', queryUiId: query.uiId, queryKey: key })
     }
     usedKeys.add(key)
 

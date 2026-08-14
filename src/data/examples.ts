@@ -183,8 +183,8 @@ export const OF3_EXAMPLES: Of3Example[] = [
   { id: 'ubiquitin', input: ubiquitin },
   { id: 'homomer', input: homomer },
   { id: 'multimer', input: multimer },
-  { id: 'protein-ligand', input: proteinLigand },
-  { id: 'single-protein-single-ligand', input: singleProteinSingleLigand },
-  { id: 'protein-ligand-pocket-constraint', input: proteinLigandPocketConstraint },
-  { id: 'protein-ligand-multiple', input: proteinLigandMultiple },
+  { id: 'proteinLigand', input: proteinLigand },
+  { id: 'singleProteinSingleLigand', input: singleProteinSingleLigand },
+  { id: 'proteinLigandPocketConstraint', input: proteinLigandPocketConstraint },
+  { id: 'proteinLigandMultiple', input: proteinLigandMultiple },
 ]

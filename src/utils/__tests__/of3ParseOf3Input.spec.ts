@@ -42,19 +42,19 @@ describe('deserializeInput — structural problems degrade to issues instead of 
   it('flags a non-object root instead of throwing', () => {
     const state = deserializeInput(parseOf3Input('[1, 2, 3]'))
     expect(state.queries).toEqual([])
-    expect(state.issues.map((i) => i.code)).toContain('root-not-object')
+    expect(state.issues.map((i) => i.code)).toContain('rootNotObject')
   })
 
   it('flags a missing/invalid "queries" field instead of throwing', () => {
     const state = deserializeInput(parseOf3Input('{}'))
     expect(state.queries).toEqual([])
-    expect(state.issues.map((i) => i.code)).toContain('queries-invalid')
+    expect(state.issues.map((i) => i.code)).toContain('queriesInvalid')
   })
 
   it('flags an empty "queries" object instead of throwing', () => {
     const state = deserializeInput(parseOf3Input('{"queries": {}}'))
     expect(state.queries).toEqual([])
-    expect(state.issues.map((i) => i.code)).toContain('queries-empty')
+    expect(state.issues.map((i) => i.code)).toContain('queriesEmpty')
   })
 
   it('drops a non-object query and flags it, keeping the rest', () => {
@@ -69,14 +69,14 @@ describe('deserializeInput — structural problems degrade to issues instead of 
       ),
     )
     expect(state.queries.map((q) => q.key)).toEqual(['good'])
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'query-not-object', queryKey: 'bad' }))
+    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'queryNotObject', queryKey: 'bad' }))
   })
 
   it('flags a query with a missing/invalid "chains" array instead of throwing', () => {
     const state = deserializeInput(parseOf3Input(JSON.stringify({ queries: { query_1: {} } })))
     expect(state.queries).toHaveLength(1)
     expect(state.queries[0]!.chains).toEqual([])
-    expect(state.issues.map((i) => i.code)).toContain('query-chains-invalid')
+    expect(state.issues.map((i) => i.code)).toContain('queryChainsInvalid')
   })
 
   it('drops a non-object chain and flags it, keeping the rest', () => {
@@ -90,7 +90,7 @@ describe('deserializeInput — structural problems degrade to issues instead of 
       ),
     )
     expect(state.queries[0]!.chains).toHaveLength(1)
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chain-not-object', params: { index: 1 } }))
+    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chainNotObject', params: { index: 1 } }))
   })
 
   it('drops a chain with a missing/invalid molecule_type and flags it', () => {
@@ -98,20 +98,20 @@ describe('deserializeInput — structural problems degrade to issues instead of 
       parseOf3Input(JSON.stringify({ queries: { query_1: { chains: [{ chain_ids: 'A', sequence: 'ACDEFG' }] } } })),
     )
     expect(state.queries[0]!.chains).toHaveLength(0)
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chain-molecule-type-invalid', params: { index: 1 } }))
+    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chainMoleculeTypeInvalid', params: { index: 1 } }))
   })
 })
 
 describe('unrecognized fields — reported through validateInput, at OpenFold3-matching severity', () => {
   it('warns on root-level "seeds"', () => {
     const issues = importAndValidate(minimalQueryJson({ seeds: [42] }))
-    expect(issues).toContainEqual(expect.objectContaining({ level: 'warning', code: 'root-seeds-field' }))
+    expect(issues).toContainEqual(expect.objectContaining({ level: 'warning', code: 'rootSeedsField' }))
   })
 
   it('warns on ccd_file_path at root — the docs list it, but InferenceQuerySet does not declare it', () => {
     const issues = importAndValidate(minimalQueryJson({ ccd_file_path: '/tmp/ccd' }))
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'warning', code: 'root-unrecognized-field', params: { field: 'ccd_file_path' } }),
+      expect.objectContaining({ level: 'warning', code: 'rootUnrecognizedField', params: { field: 'ccd_file_path' } }),
     )
   })
 
@@ -127,7 +127,7 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
       },
     })
     const issues = importAndValidate(text)
-    expect(issues.map((i) => i.code)).not.toContain('query-unrecognized-field')
+    expect(issues.map((i) => i.code)).not.toContain('queryUnrecognizedField')
   })
 
   it('warns on an unrecognized query-level field', () => {
@@ -136,7 +136,7 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
     })
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'warning', code: 'query-unrecognized-field', params: { field: 'made_up' } }),
+      expect.objectContaining({ level: 'warning', code: 'queryUnrecognizedField', params: { field: 'made_up' } }),
     )
   })
 
@@ -147,7 +147,7 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
     expect(() => parseOf3Input(text)).not.toThrow()
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'error', code: 'chain-unrecognized-field', params: { field: 'made_up_field' } }),
+      expect.objectContaining({ level: 'error', code: 'chainUnrecognizedField', params: { field: 'made_up_field' } }),
     )
   })
 
@@ -158,7 +158,7 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
       queries: { query_1: { chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', smiles: 'CCO' }] } },
     })
     const issues = importAndValidate(text)
-    expect(issues.map((i) => i.code)).not.toContain('chain-unrecognized-field')
+    expect(issues.map((i) => i.code)).not.toContain('chainUnrecognizedField')
   })
 
   it('does not block on an unrecognized pocket_constraint field', () => {
@@ -176,13 +176,13 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
     expect(() => parseOf3Input(text)).not.toThrow()
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'error', code: 'pocket-constraint-unrecognized-field', params: { field: 'extra_threshold' } }),
+      expect.objectContaining({ level: 'error', code: 'pocketConstraintUnrecognizedField', params: { field: 'extra_threshold' } }),
     )
   })
 })
 
 describe('content problems that used to block are now reported through validateInput only', () => {
-  it('chain-template-conflict', () => {
+  it('chainTemplateConflict', () => {
     const text = JSON.stringify({
       queries: {
         query_1: {
@@ -199,7 +199,7 @@ describe('content problems that used to block are now reported through validateI
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('chain-template-conflict')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('chainTemplateConflict')
   })
 
   it('template_cif_chain_ids length mismatch', () => {
@@ -219,7 +219,7 @@ describe('content problems that used to block are now reported through validateI
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('chain-template-cif-length-mismatch')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('chainTemplateCifLengthMismatch')
   })
 
   it('a ligand chain specifying both smiles and ccd_codes', () => {
@@ -227,7 +227,7 @@ describe('content problems that used to block are now reported through validateI
       queries: { query_1: { chains: [{ molecule_type: 'ligand', chain_ids: 'L', smiles: 'CCO', ccd_codes: 'NAG' }] } },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('ligand-identifier-conflict')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('ligandIdentifierConflict')
   })
 
   it('an empty pocket_constraint.ligand_chain_id', () => {
@@ -240,7 +240,7 @@ describe('content problems that used to block are now reported through validateI
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('pocket-ligand-id-empty')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('pocketLigandIdEmpty')
   })
 
   it('an empty pocket_constraint.pocket_residues', () => {
@@ -253,7 +253,7 @@ describe('content problems that used to block are now reported through validateI
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('pocket-residues-empty')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('pocketResiduesEmpty')
   })
 
   it('a non-positive pocket_constraint.max_distance', () => {
@@ -266,6 +266,6 @@ describe('content problems that used to block are now reported through validateI
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
-    expect(importAndValidate(text).map((i) => i.code)).toContain('pocket-max-distance-invalid')
+    expect(importAndValidate(text).map((i) => i.code)).toContain('pocketMaxDistanceInvalid')
   })
 })

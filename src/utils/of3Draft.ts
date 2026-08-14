@@ -19,7 +19,7 @@ const MOLECULE_TYPES: MoleculeType[] = ['protein', 'rna', 'dna', 'ligand']
 // parse-time exceptions — see captureRaw/RawShape.unrecognized and of3Validate.ts.
 // "seeds" is deliberately NOT whitelisted even though InferenceQuerySet declares it: the docs
 // explicitly say it shouldn't be hand-authored in the input JSON (use --num-model-seeds or
-// runner.yml instead), so it's flagged too — with its own message ('root-seeds-field')
+// runner.yml instead), so it's flagged too — with its own message ('rootSeedsField')
 // rather than the generic "unrecognized field" one, since it's not that OpenFold3 doesn't
 // recognize it, but that setting it here has no effect.
 const ROOT_KEYS = new Set(['queries'])
@@ -217,12 +217,12 @@ function asString(value: unknown): string | undefined {
 function chainFromSpec(rawChain: unknown, index: number, queryKey: string, queryUiId: string | undefined, issues: Issue[]): ChainDraft | null {
   const chain = asRecord(rawChain)
   if (!chain) {
-    issues.push({ level: 'error', code: 'chain-not-object', queryUiId, queryKey, params: { index: index + 1 } })
+    issues.push({ level: 'error', code: 'chainNotObject', queryUiId, queryKey, params: { index: index + 1 } })
     return null
   }
   const moleculeTypeRaw = getField(chain, 'molecule_type')
   if (!MOLECULE_TYPES.includes(moleculeTypeRaw as MoleculeType)) {
-    issues.push({ level: 'error', code: 'chain-molecule-type-invalid', queryUiId, queryKey, params: { index: index + 1 } })
+    issues.push({ level: 'error', code: 'chainMoleculeTypeInvalid', queryUiId, queryKey, params: { index: index + 1 } })
     return null
   }
   const moleculeType = moleculeTypeRaw as MoleculeType
@@ -306,7 +306,7 @@ function reconcileInto<T extends { uiId: string }>(existing: T, fresh: T): T {
 function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraft[], issues: Issue[]): QueryDraft | null {
   const query = asRecord(rawQuery)
   if (!query) {
-    issues.push({ level: 'error', code: 'query-not-object', queryKey: key })
+    issues.push({ level: 'error', code: 'queryNotObject', queryKey: key })
     return null
   }
 
@@ -315,7 +315,7 @@ function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraf
 
   const rawChains = getField(query, 'chains')
   if (!Array.isArray(rawChains)) {
-    issues.push({ level: 'error', code: 'query-chains-invalid', queryUiId: draft.uiId, queryKey: key })
+    issues.push({ level: 'error', code: 'queryChainsInvalid', queryUiId: draft.uiId, queryKey: key })
   } else {
     draft.chains = rawChains
       .map((rawChain, i) => {
@@ -409,14 +409,14 @@ export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] 
   const issues: Issue[] = []
   const root = asRecord(parsed)
   if (!root) {
-    issues.push({ level: 'error', code: 'root-not-object' })
+    issues.push({ level: 'error', code: 'rootNotObject' })
     return { queries: [], rootRaw: emptyRaw(), issues }
   }
   const rootRaw = captureRaw(root, ROOT_MANAGED_FIELDS, ROOT_KEYS)
 
   const rawQueries = asRecord(getField(root, 'queries'))
   if (!rawQueries) {
-    issues.push({ level: 'error', code: 'queries-invalid' })
+    issues.push({ level: 'error', code: 'queriesInvalid' })
     return { queries: [], rootRaw, issues }
   }
 
@@ -430,7 +430,7 @@ export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] 
   }
 
   if (queries.length === 0) {
-    issues.push({ level: 'error', code: 'queries-empty' })
+    issues.push({ level: 'error', code: 'queriesEmpty' })
   }
 
   return { queries, rootRaw, issues }

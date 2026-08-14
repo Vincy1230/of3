@@ -44,19 +44,19 @@ export default {
       name: 'Multimer — Deoxy human hemoglobin (1A3N)',
       description: 'Two different protein sequences, each duplicated.',
     },
-    'protein-ligand': {
+    proteinLigand: {
       name: 'Protein-ligand — Mcl-1 with an inhibitor (5FDR)',
       description: 'A protein plus a CCD-code ligand and a SMILES ligand.',
     },
-    'single-protein-single-ligand': {
+    singleProteinSingleLigand: {
       name: 'Single protein, single ligand — T4 Lysozyme + toluene (7L39)',
       description: 'The smallest protein-ligand complex example.',
     },
-    'protein-ligand-pocket-constraint': {
+    proteinLigandPocketConstraint: {
       name: 'Pocket constraint — Beta-lactamase (1PZP)',
       description: 'Protein-ligand complex biased toward a specific binding pocket.',
     },
-    'protein-ligand-multiple': {
+    proteinLigandMultiple: {
       name: 'Batch — two Mcl-1 queries with different inhibitors',
       description: 'Two independent queries submitted in a single input file.',
     },
@@ -147,43 +147,43 @@ export default {
     warningLabel: 'Warning',
     context: 'Query "{queryKey}"',
     contextChain: 'Query "{queryKey}" / chain "{chainLabel}"',
-    'root-not-object': 'The JSON root must be an object with a "queries" field.',
-    'queries-invalid': '"queries" must be an object mapping query keys to query objects.',
-    'queries-empty': '"queries" doesn\'t contain any queries yet.',
-    'query-not-object': 'This query must be an object.',
-    'query-chains-invalid': 'This query is missing a "chains" array.',
-    'chain-not-object': 'Chain #{index} must be an object.',
-    'chain-molecule-type-invalid': 'Chain #{index} has a missing or invalid "molecule_type" (expected protein, rna, dna, or ligand).',
-    'root-unrecognized-field': 'Unrecognized field "{field}" at the JSON root — OpenFold3 silently ignores it rather than using it.',
-    'root-seeds-field':
+    rootNotObject: 'The JSON root must be an object with a "queries" field.',
+    queriesInvalid: '"queries" must be an object mapping query keys to query objects.',
+    queriesEmpty: '"queries" doesn\'t contain any queries yet.',
+    queryNotObject: 'This query must be an object.',
+    queryChainsInvalid: 'This query is missing a "chains" array.',
+    chainNotObject: 'Chain #{index} must be an object.',
+    chainMoleculeTypeInvalid: 'Chain #{index} has a missing or invalid "molecule_type" (expected protein, rna, dna, or ligand).',
+    rootUnrecognizedField: 'Unrecognized field "{field}" at the JSON root — OpenFold3 silently ignores it rather than using it.',
+    rootSeedsField:
       '"seeds" isn\'t meant to be set here — the docs say OpenFold3 only reads it back from the output query set, not from your input JSON. Use the --num-model-seeds CLI flag or runner.yml to control seeds instead.',
-    'query-unrecognized-field': 'Unrecognized field "{field}" in this query — OpenFold3 silently ignores it rather than using it.',
-    'chain-unrecognized-field': 'Unrecognized field "{field}" on this chain — OpenFold3 rejects unknown chain fields instead of ignoring them.',
-    'pocket-constraint-unrecognized-field':
+    queryUnrecognizedField: 'Unrecognized field "{field}" in this query — OpenFold3 silently ignores it rather than using it.',
+    chainUnrecognizedField: 'Unrecognized field "{field}" on this chain — OpenFold3 rejects unknown chain fields instead of ignoring them.',
+    pocketConstraintUnrecognizedField:
       'Unrecognized field "{field}" in this pocket constraint — OpenFold3 rejects unknown fields there instead of ignoring them.',
-    'query-key-empty': 'Query key cannot be empty.',
-    'query-key-duplicate': 'Query key "{queryKey}" is used more than once.',
-    'query-no-chains': 'This query has no chains yet.',
-    'chain-ids-empty': 'Chain ID(s) cannot be empty.',
-    'chain-ids-duplicate': 'Chain ID "{id}" is used more than once in this query.',
-    'sequence-empty': 'Sequence cannot be empty.',
-    'sequence-invalid-chars': 'Sequence contains characters outside the allowed alphabet.',
-    'ligand-missing-identifier': 'Provide either a SMILES string or a CCD code for this ligand.',
-    'ligand-sdf-not-implemented':
+    queryKeyEmpty: 'Query key cannot be empty.',
+    queryKeyDuplicate: 'Query key "{queryKey}" is used more than once.',
+    queryNoChains: 'This query has no chains yet.',
+    chainIdsEmpty: 'Chain ID(s) cannot be empty.',
+    chainIdsDuplicate: 'Chain ID "{id}" is used more than once in this query.',
+    sequenceEmpty: 'Sequence cannot be empty.',
+    sequenceInvalidChars: 'Sequence contains characters outside the allowed alphabet.',
+    ligandMissingIdentifier: 'Provide either a SMILES string or a CCD code for this ligand.',
+    ligandSdfNotImplemented:
       "OpenFold3 doesn't implement SDF ligand input yet — it raises NotImplementedError while building the structure. Use SMILES or a CCD code instead.",
-    'ligand-multiple-ccd-not-implemented':
+    ligandMultipleCcdNotImplemented:
       "OpenFold3 doesn't support multiple CCD codes on a single chain yet — it raises NotImplementedError while building the structure. Use a single CCD code or SMILES instead.",
-    'pocket-ligand-not-found': 'Pocket constraint ligand chain "{ligandId}" does not match any ligand chain in this query.',
-    'pocket-ligand-id-empty': 'Pocket constraint needs a ligand chain to be selected.',
-    'pocket-residues-empty': 'Pocket constraint needs at least one pocket residue.',
-    'pocket-max-distance-invalid': 'Max distance must be a positive number.',
-    'chain-template-conflict': 'A chain cannot specify both a template alignment file and template CIF files.',
-    'chain-template-cif-length-mismatch':
+    pocketLigandNotFound: 'Pocket constraint ligand chain "{ligandId}" does not match any ligand chain in this query.',
+    pocketLigandIdEmpty: 'Pocket constraint needs a ligand chain to be selected.',
+    pocketResiduesEmpty: 'Pocket constraint needs at least one pocket residue.',
+    pocketMaxDistanceInvalid: 'Max distance must be a positive number.',
+    chainTemplateConflict: 'A chain cannot specify both a template alignment file and template CIF files.',
+    chainTemplateCifLengthMismatch:
       "The imported JSON's template_cif_chain_ids didn't have as many entries as template_cif_paths — some rows may have been paired up wrong or dropped on import. Check the template rows below.",
-    'ligand-identifier-conflict':
+    ligandIdentifierConflict:
       'The imported JSON gave more than one of smiles/ccd_codes/sdf_file_path for this ligand — only one was kept, the rest were dropped on import. Provide just one.',
-    'non-canonical-residue-out-of-range': 'Residue index {index} is outside the sequence length.',
-    'covalent-bonds-no-effect':
+    nonCanonicalResidueOutOfRange: 'Residue index {index} is outside the sequence length.',
+    covalentBondsNoEffect:
       "The current OpenFold3 release doesn't consume covalent_bonds downstream — it parses without error, but has no effect on the prediction.",
   },
 } as const

@@ -32,43 +32,43 @@ describe('validateInput', () => {
   it('flags an empty query key', () => {
     const query = validProteinLigandQuery()
     query.key = '  '
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('query-key-empty')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('queryKeyEmpty')
   })
 
   it('flags duplicate query keys', () => {
     const a = validProteinLigandQuery()
     const b = validProteinLigandQuery()
     b.key = a.key
-    expect(codesOf(validateInput({ queries: [a, b] }))).toContain('query-key-duplicate')
+    expect(codesOf(validateInput({ queries: [a, b] }))).toContain('queryKeyDuplicate')
   })
 
   it('flags a query with no chains', () => {
     const query = createEmptyQuery('query_1')
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('query-no-chains')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('queryNoChains')
   })
 
   it('flags empty chain_ids', () => {
     const query = validProteinLigandQuery()
     query.chains[0]!.chainIds = ''
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('chain-ids-empty')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('chainIdsEmpty')
   })
 
   it('flags duplicate chain_ids within the same query', () => {
     const query = validProteinLigandQuery()
     query.chains[1]!.chainIds = 'A'
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('chain-ids-duplicate')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('chainIdsDuplicate')
   })
 
   it('flags an empty protein sequence', () => {
     const query = validProteinLigandQuery()
     query.chains[0]!.sequence = ''
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('sequence-empty')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('sequenceEmpty')
   })
 
   it('flags a protein sequence with invalid characters', () => {
     const query = validProteinLigandQuery()
     query.chains[0]!.sequence = 'ACDEFG123'
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('sequence-invalid-chars')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('sequenceInvalidChars')
   })
 
   it('accepts valid RNA and DNA alphabets', () => {
@@ -86,7 +86,7 @@ describe('validateInput', () => {
   it('flags a ligand with neither smiles nor ccd_codes', () => {
     const query = validProteinLigandQuery()
     query.chains[1]!.smiles = ''
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('ligand-missing-identifier')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('ligandMissingIdentifier')
   })
 
   it('flags a pocket constraint whose ligand_chain_id does not match any ligand chain', () => {
@@ -98,14 +98,14 @@ describe('validateInput', () => {
       maxDistance: '',
       raw: emptyRaw(),
     }
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-ligand-not-found')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocketLigandNotFound')
   })
 
   it('flags a pocket constraint with no residues', () => {
     const query = validProteinLigandQuery()
     query.pocketConstraintEnabled = true
     query.pocketConstraint = { ligandChainId: 'L', residues: [], maxDistance: '', raw: emptyRaw() }
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-residues-empty')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocketResiduesEmpty')
   })
 
   it('flags a pocket constraint with no ligand chain selected', () => {
@@ -117,7 +117,7 @@ describe('validateInput', () => {
       maxDistance: '',
       raw: emptyRaw(),
     }
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-ligand-id-empty')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocketLigandIdEmpty')
   })
 
   it('flags a non-positive pocket constraint max distance', () => {
@@ -129,14 +129,14 @@ describe('validateInput', () => {
       maxDistance: '-1',
       raw: emptyRaw(),
     }
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-max-distance-invalid')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocketMaxDistanceInvalid')
   })
 
   it('flags a protein chain with both a template alignment file and template CIF files', () => {
     const query = validProteinLigandQuery()
     query.chains[0]!.templateAlignmentFilePath = '/path/to/alignment'
     query.chains[0]!.templateCifRows = [{ path: '/path/to/template.cif', chainId: '' }]
-    expect(codesOf(validateInput({ queries: [query] }))).toContain('chain-template-conflict')
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('chainTemplateConflict')
   })
 
   it('accepts a well-formed pocket constraint', () => {
@@ -155,7 +155,7 @@ describe('validateInput', () => {
     const query = validProteinLigandQuery()
     query.chains[0]!.nonCanonicalResidues = [{ index: '999', code: 'SEP' }]
     const issues = validateInput({ queries: [query] })
-    const issue = issues.find((i) => i.code === 'non-canonical-residue-out-of-range')
+    const issue = issues.find((i) => i.code === 'nonCanonicalResidueOutOfRange')
     expect(issue?.level).toBe('warning')
   })
 
@@ -165,7 +165,7 @@ describe('validateInput', () => {
     query.chains[1]!.smiles = ''
     query.chains[1]!.sdfFilePath = '/path/to/ligand.sdf'
     const issues = validateInput({ queries: [query] })
-    const issue = issues.find((i) => i.code === 'ligand-sdf-not-implemented')
+    const issue = issues.find((i) => i.code === 'ligandSdfNotImplemented')
     expect(issue?.level).toBe('error')
   })
 
@@ -175,7 +175,7 @@ describe('validateInput', () => {
     query.chains[1]!.smiles = ''
     query.chains[1]!.ccdCodes = 'NAG, BMA'
     const issues = validateInput({ queries: [query] })
-    const issue = issues.find((i) => i.code === 'ligand-multiple-ccd-not-implemented')
+    const issue = issues.find((i) => i.code === 'ligandMultipleCcdNotImplemented')
     expect(issue?.level).toBe('error')
   })
 
@@ -184,14 +184,14 @@ describe('validateInput', () => {
     query.chains[1]!.ligandMode = 'ccd'
     query.chains[1]!.smiles = ''
     query.chains[1]!.ccdCodes = 'NAG'
-    expect(codesOf(validateInput({ queries: [query] }))).not.toContain('ligand-multiple-ccd-not-implemented')
+    expect(codesOf(validateInput({ queries: [query] }))).not.toContain('ligandMultipleCcdNotImplemented')
   })
 
   it('warns that covalent_bonds has no downstream effect in the current OpenFold3 release', () => {
     const query = validProteinLigandQuery()
     query.covalentBonds = [{ chain1: 'A', residue1: '1', atom1: '1', chain2: 'L', residue2: '1', atom2: '1' }]
     const issues = validateInput({ queries: [query] })
-    const issue = issues.find((i) => i.code === 'covalent-bonds-no-effect')
+    const issue = issues.find((i) => i.code === 'covalentBondsNoEffect')
     expect(issue?.level).toBe('warning')
   })
 })
