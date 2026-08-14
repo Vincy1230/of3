@@ -38,13 +38,7 @@ function removeNonCanonicalRow(i: number) {
     </div>
 
     <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed>
-      <label class="checkbox-field"><input type="checkbox" v-model="chain.useMsas" /> {{ t('chain.useMsas') }}</label>
-      <label class="checkbox-field"
-        ><input type="checkbox" v-model="chain.useMainMsas" /> {{ t('chain.useMainMsas') }}</label
-      >
-      <label class="checkbox-field"
-        ><input type="checkbox" v-model="chain.usePairedMsas" /> {{ t('chain.usePairedMsas') }}</label
-      >
+      <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
 
       <div class="field">
         <label>{{ t('chain.mainMsaPathsLabel') }}</label>

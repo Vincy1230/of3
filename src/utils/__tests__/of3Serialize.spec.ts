@@ -83,4 +83,36 @@ describe('serializeInput', () => {
       },
     })
   })
+
+  it('round-trips cyclic chains, an SDF ligand, and query-level covalent_bonds', () => {
+    const draftState = deserializeInput({
+      queries: {
+        demo: {
+          chains: [
+            { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', cyclic: true },
+            { molecule_type: 'ligand', chain_ids: 'L', sdf_file_path: '/path/to/ligand.sdf' },
+          ],
+          covalent_bonds: [
+            [
+              ['A', 5, 1],
+              ['L', 1, 3],
+            ],
+          ],
+        },
+      },
+    })
+    const output = serializeInput(draftState)
+    expect(output.queries.demo).toEqual({
+      chains: [
+        { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', cyclic: true },
+        { molecule_type: 'ligand', chain_ids: 'L', sdf_file_path: '/path/to/ligand.sdf' },
+      ],
+      covalent_bonds: [
+        [
+          ['A', 5, 1],
+          ['L', 1, 3],
+        ],
+      ],
+    })
+  })
 })

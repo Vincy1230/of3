@@ -24,19 +24,18 @@ export interface ChainDraft {
   description: string
   sequence: string
   /** Ligand only: which representation this draft currently uses */
-  ligandMode: 'smiles' | 'ccd'
+  ligandMode: 'smiles' | 'ccd' | 'sdf'
   smiles: string
   /** Comma-separated CCD component codes */
   ccdCodes: string
-  /** Shared by protein/rna, defaults to true; unchecking is what gets written to JSON */
-  useMsas: boolean
-  useMainMsas: boolean
-  usePairedMsas: boolean
+  sdfFilePath: string
   mainMsaFilePaths: string
   pairedMsaFilePaths: string
   templateAlignmentFilePath: string
   templateCifRows: TemplateCifRow[]
   nonCanonicalResidues: NonCanonicalResidueRow[]
+  /** Protein/RNA/DNA only: marks the chain as a head-to-tail cyclic polymer. */
+  cyclic: boolean
 }
 
 export interface PocketResidueRow {
@@ -52,11 +51,27 @@ export interface PocketConstraintDraft {
   maxDistance: string
 }
 
+export interface CovalentBondRow {
+  chain1: string
+  /** 1-based residue index, raw string */
+  residue1: string
+  /** 1-based atom index within the residue's canonical atom order, raw string */
+  atom1: string
+  chain2: string
+  residue2: string
+  atom2: string
+}
+
 export interface QueryDraft {
   uiId: string
   /** Key in the queries dict, e.g. "query_1" */
   key: string
   chains: ChainDraft[]
+  /** Query-wide, defaults to true; unchecking is what gets written to JSON */
+  useMsas: boolean
+  useMainMsas: boolean
+  usePairedMsas: boolean
+  covalentBonds: CovalentBondRow[]
   pocketConstraintEnabled: boolean
   pocketConstraint: PocketConstraintDraft
 }
@@ -64,5 +79,4 @@ export interface QueryDraft {
 export interface BuilderState {
   queries: QueryDraft[]
   activeQueryUiId: string | null
-  ccdFilePath: string
 }

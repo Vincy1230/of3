@@ -12,9 +12,15 @@ export type IssueCode =
   | 'sequence-empty'
   | 'sequence-invalid-chars'
   | 'ligand-missing-identifier'
+  | 'ligand-sdf-not-implemented'
+  | 'ligand-multiple-ccd-not-implemented'
   | 'pocket-ligand-not-found'
+  | 'pocket-ligand-id-empty'
   | 'pocket-residues-empty'
+  | 'pocket-max-distance-invalid'
+  | 'chain-template-conflict'
   | 'non-canonical-residue-out-of-range'
+  | 'covalent-bonds-no-effect'
 
 export interface Issue {
   level: 'error' | 'warning'
@@ -63,10 +69,31 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   if (chain.moleculeType === 'ligand') {
     const hasSmiles = chain.ligandMode === 'smiles' && chain.smiles.trim().length > 0
     const hasCcd = chain.ligandMode === 'ccd' && parseList(chain.ccdCodes).length > 0
-    if (!hasSmiles && !hasCcd) {
+    const hasSdf = chain.ligandMode === 'sdf' && chain.sdfFilePath.trim().length > 0
+    if (!hasSmiles && !hasCcd && !hasSdf) {
       issues.push({
         level: 'error',
         code: 'ligand-missing-identifier',
+        queryUiId: query.uiId,
+        queryKey: key,
+        chainUiId: chain.uiId,
+        chainLabel: label,
+      })
+    }
+    if (hasSdf) {
+      issues.push({
+        level: 'error',
+        code: 'ligand-sdf-not-implemented',
+        queryUiId: query.uiId,
+        queryKey: key,
+        chainUiId: chain.uiId,
+        chainLabel: label,
+      })
+    }
+    if (hasCcd && parseList(chain.ccdCodes).length > 1) {
+      issues.push({
+        level: 'error',
+        code: 'ligand-multiple-ccd-not-implemented',
         queryUiId: query.uiId,
         queryKey: key,
         chainUiId: chain.uiId,
@@ -101,6 +128,17 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   }
 
   if (chain.moleculeType === 'protein') {
+    if (chain.templateAlignmentFilePath.trim() && chain.templateCifRows.some((row) => row.path.trim())) {
+      issues.push({
+        level: 'error',
+        code: 'chain-template-conflict',
+        queryUiId: query.uiId,
+        queryKey: key,
+        chainUiId: chain.uiId,
+        chainLabel: label,
+      })
+    }
+
     const seqLen = sequence.length
     for (const row of chain.nonCanonicalResidues) {
       if (!row.index.trim() || !row.code.trim()) continue
@@ -140,9 +178,18 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
     }
   }
 
+  const hasCovalentBond = query.covalentBonds.some(
+    (row) => row.chain1.trim() && row.residue1.trim() && row.atom1.trim() && row.chain2.trim() && row.residue2.trim() && row.atom2.trim(),
+  )
+  if (hasCovalentBond) {
+    issues.push({ level: 'warning', code: 'covalent-bonds-no-effect', queryUiId: query.uiId, queryKey: key })
+  }
+
   if (query.pocketConstraintEnabled) {
     const ligandId = query.pocketConstraint.ligandChainId.trim()
-    if (ligandId && !ligandChainIdSet.has(ligandId)) {
+    if (!ligandId) {
+      issues.push({ level: 'error', code: 'pocket-ligand-id-empty', queryUiId: query.uiId, queryKey: key })
+    } else if (!ligandChainIdSet.has(ligandId)) {
       issues.push({
         level: 'error',
         code: 'pocket-ligand-not-found',
@@ -154,6 +201,14 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
     const residues = query.pocketConstraint.residues.filter((row) => row.chainId.trim() && row.residueId.trim())
     if (residues.length === 0) {
       issues.push({ level: 'error', code: 'pocket-residues-empty', queryUiId: query.uiId, queryKey: key })
+    }
+
+    const maxDistanceRaw = query.pocketConstraint.maxDistance.trim()
+    if (maxDistanceRaw) {
+      const maxDistance = Number(maxDistanceRaw)
+      if (Number.isNaN(maxDistance) || maxDistance <= 0) {
+        issues.push({ level: 'error', code: 'pocket-max-distance-invalid', queryUiId: query.uiId, queryKey: key })
+      }
     }
   }
 }

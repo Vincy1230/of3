@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import type { MoleculeType } from '@/types/of3'
 import type { ChainDraft, QueryDraft } from '@/types/draft'
 import { createEmptyChain, createEmptyQuery, createId, deserializeInput, parseOf3Input } from '@/utils/of3Draft'
+import type { UnknownFieldWarning } from '@/utils/of3Draft'
 import { serializeInput } from '@/utils/of3Serialize'
 import { validateInput } from '@/utils/of3Validate'
 import { OF3_EXAMPLES } from '@/data/examples'
@@ -21,13 +22,13 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
   const initialQuery = createEmptyQuery('query_1')
   const queries = ref<QueryDraft[]>([initialQuery])
   const activeQueryUiId = ref<string | null>(initialQuery.uiId)
-  const ccdFilePath = ref('')
+  const importWarnings = ref<UnknownFieldWarning[]>([])
 
   const activeQuery = computed<QueryDraft | null>(
     () => queries.value.find((q) => q.uiId === activeQueryUiId.value) ?? null,
   )
 
-  const output = computed(() => serializeInput({ queries: queries.value, ccdFilePath: ccdFilePath.value }))
+  const output = computed(() => serializeInput({ queries: queries.value }))
   const issues = computed(() => validateInput({ queries: queries.value }))
 
   function setActiveQuery(uiId: string) {
@@ -53,7 +54,7 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
   function duplicateQuery(uiId: string) {
     const source = queries.value.find((q) => q.uiId === uiId)
     if (!source) return
-    const clone = deserializeInput(serializeInput({ queries: [source], ccdFilePath: '' })).queries[0]
+    const clone = deserializeInput(serializeInput({ queries: [source] })).queries[0]
     if (!clone) return
     clone.key = nextQueryKey(queries.value)
     queries.value.splice(queries.value.indexOf(source) + 1, 0, clone)
@@ -91,8 +92,9 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     if (query) query.pocketConstraintEnabled = enabled
   }
 
-  function setCcdFilePath(path: string) {
-    ccdFilePath.value = path
+  function setQueryMsaOptions(queryUiId: string, patch: Partial<Pick<QueryDraft, 'useMsas' | 'useMainMsas' | 'usePairedMsas'>>) {
+    const query = queries.value.find((q) => q.uiId === queryUiId)
+    if (query) Object.assign(query, patch)
   }
 
   function loadExample(exampleId: string) {
@@ -100,33 +102,36 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     if (!example) return
     const state = deserializeInput(example.input)
     queries.value = state.queries
-    ccdFilePath.value = state.ccdFilePath
     activeQueryUiId.value = queries.value[0]?.uiId ?? null
   }
 
   /** Parses raw JSON text and replaces the current form state with it. Throws on invalid input, leaving state untouched. */
   function loadFromJson(text: string) {
-    const input = parseOf3Input(text)
+    const { input, warnings } = parseOf3Input(text)
     const state = deserializeInput(input)
     queries.value = state.queries
-    ccdFilePath.value = state.ccdFilePath
     activeQueryUiId.value = queries.value.some((q) => q.uiId === activeQueryUiId.value)
       ? activeQueryUiId.value
       : (queries.value[0]?.uiId ?? null)
+    importWarnings.value = warnings
+  }
+
+  function clearImportWarnings() {
+    importWarnings.value = []
   }
 
   function reset() {
     const query = createEmptyQuery('query_1')
     queries.value = [query]
     activeQueryUiId.value = query.uiId
-    ccdFilePath.value = ''
+    importWarnings.value = []
   }
 
   return {
     queries,
     activeQueryUiId,
     activeQuery,
-    ccdFilePath,
+    importWarnings,
     output,
     issues,
     setActiveQuery,
@@ -138,9 +143,10 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     removeChain,
     updateChain,
     setPocketConstraintEnabled,
-    setCcdFilePath,
+    setQueryMsaOptions,
     loadExample,
     loadFromJson,
+    clearImportWarnings,
     reset,
     createId,
   }

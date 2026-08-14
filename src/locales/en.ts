@@ -85,13 +85,13 @@ export default {
     ligandModeLabel: 'Specify ligand by',
     ligandModeSmiles: 'SMILES',
     ligandModeCcd: 'CCD code',
+    ligandModeSdf: 'SDF file',
     smilesLabel: 'SMILES string',
     ccdCodesLabel: 'CCD code(s)',
     ccdCodesHint: 'Comma-separated three-letter component codes, e.g. "NAG".',
+    sdfFilePathLabel: 'SDF file path',
+    cyclic: 'Cyclic (head-to-tail)',
     advancedTitle: 'MSA & template options',
-    useMsas: 'Use MSAs',
-    useMainMsas: 'Use main (unpaired) MSAs',
-    usePairedMsas: 'Use paired MSAs',
     mainMsaPathsLabel: 'Main MSA file path(s)',
     pairedMsaPathsLabel: 'Paired MSA file path(s)',
     templateAlignmentPathLabel: 'Template alignment file path',
@@ -124,10 +124,21 @@ export default {
     maxDistanceLabel: 'Max distance (Å)',
     maxDistanceHint: 'Default 4.0 if left blank.',
   },
-  globalOptions: {
-    title: 'Global options',
-    ccdFilePathLabel: 'Custom CCD dictionary path',
-    ccdFilePathHint: 'Optional path to a custom CCD component file (ccd_file_path).',
+  queryOptions: {
+    title: 'MSA options',
+    hint: 'Applies to every chain in this query — OpenFold3 controls MSA usage per query, not per chain.',
+    useMsas: 'Use MSAs',
+    useMainMsas: 'Use main (unpaired) MSAs',
+    usePairedMsas: 'Use paired MSAs',
+  },
+  covalentBonds: {
+    title: 'Covalent bonds',
+    hint: 'Explicit atom-to-atom bonds, e.g. a disulfide bridge or a ligand-to-residue linkage. atom_id indexes into the residue\'s canonical atom order.',
+    atomLabel: 'Atom {n}',
+    chainIdLabel: 'Chain ID',
+    residueIdLabel: 'Residue index',
+    atomIdLabel: 'Atom index',
+    addBond: 'Add bond',
   },
   jsonPreview: {
     title: 'Generated JSON',
@@ -139,6 +150,9 @@ export default {
     previewMode: 'Preview',
     editMode: 'Edit',
     parseError: 'Failed to parse JSON: {message}',
+    unknownFieldIgnored: 'Unrecognized field "{key}" at {path} — OpenFold3 silently ignores it rather than using it.',
+    seedsFieldWarning:
+      '"seeds" isn\'t meant to be set here — the docs say OpenFold3 only reads it back from the output query set, not from your input JSON. Use the --num-model-seeds CLI flag or runner.yml to control seeds instead.',
   },
   validation: {
     title: 'Validation',
@@ -154,9 +168,18 @@ export default {
     'chain-ids-duplicate': 'Chain ID "{id}" is used more than once in this query.',
     'sequence-empty': 'Sequence cannot be empty.',
     'sequence-invalid-chars': 'Sequence contains characters outside the allowed alphabet.',
-    'ligand-missing-identifier': 'Provide either a SMILES string or a CCD code for this ligand.',
+    'ligand-missing-identifier': 'Provide a SMILES string, a CCD code, or an SDF file path for this ligand.',
+    'ligand-sdf-not-implemented':
+      "OpenFold3 doesn't implement SDF ligand input yet — it raises NotImplementedError while building the structure. Use SMILES or a CCD code instead.",
+    'ligand-multiple-ccd-not-implemented':
+      "OpenFold3 doesn't support multiple CCD codes on a single chain yet — it raises NotImplementedError while building the structure. Use a single CCD code or SMILES instead.",
     'pocket-ligand-not-found': 'Pocket constraint ligand chain "{ligandId}" does not match any ligand chain in this query.',
+    'pocket-ligand-id-empty': 'Pocket constraint needs a ligand chain to be selected.',
     'pocket-residues-empty': 'Pocket constraint needs at least one pocket residue.',
+    'pocket-max-distance-invalid': 'Max distance must be a positive number.',
+    'chain-template-conflict': 'A chain cannot specify both a template alignment file and template CIF files.',
     'non-canonical-residue-out-of-range': 'Residue index {index} is outside the sequence length.',
+    'covalent-bonds-no-effect':
+      "The current OpenFold3 release doesn't consume covalent_bonds downstream — it parses without error, but has no effect on the prediction.",
   },
 } as const

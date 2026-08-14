@@ -7,8 +7,9 @@ import AppHeader from '@/components/AppHeader.vue'
 import PresetSelector from '@/components/PresetSelector.vue'
 import QueryManager from '@/components/QueryManager.vue'
 import ChainList from '@/components/ChainList.vue'
+import QueryMsaOptionsPanel from '@/components/QueryMsaOptionsPanel.vue'
+import CovalentBondsPanel from '@/components/CovalentBondsPanel.vue'
 import PocketConstraintPanel from '@/components/PocketConstraintPanel.vue'
-import GlobalOptionsPanel from '@/components/GlobalOptionsPanel.vue'
 import ValidationSummary from '@/components/ValidationSummary.vue'
 import JsonPreviewPanel from '@/components/JsonPreviewPanel.vue'
 import SiteFooter from '@/components/SiteFooter.vue'
@@ -22,8 +23,9 @@ import SiteFooter from '@/components/SiteFooter.vue'
         <PresetSelector />
         <QueryManager />
         <ChainList />
+        <QueryMsaOptionsPanel />
+        <CovalentBondsPanel />
         <PocketConstraintPanel />
-        <GlobalOptionsPanel />
       </aside>
       <section class="col workspace-col">
         <ValidationSummary />

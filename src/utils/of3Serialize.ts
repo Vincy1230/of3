@@ -2,6 +2,8 @@
 // Email: vincy@vincy1230.net
 
 import type {
+  Atom,
+  Bond,
   Chain,
   DnaChain,
   LigandChain,
@@ -51,10 +53,6 @@ export function serializeChain(draft: ChainDraft): Chain {
     const nonCanonical = buildNonCanonicalResidues(draft.nonCanonicalResidues)
     if (nonCanonical) chain.non_canonical_residues = nonCanonical
 
-    if (!draft.useMsas) chain.use_msas = false
-    if (!draft.useMainMsas) chain.use_main_msas = false
-    if (!draft.usePairedMsas) chain.use_paired_msas = false
-
     const mainMsa = toStrOrList(parseList(draft.mainMsaFilePaths))
     if (mainMsa) chain.main_msa_file_paths = mainMsa
     const pairedMsa = toStrOrList(parseList(draft.pairedMsaFilePaths))
@@ -69,35 +67,54 @@ export function serializeChain(draft: ChainDraft): Chain {
       chain.template_cif_chain_ids = cifRows.map((row) => (row.chainId.trim() ? row.chainId.trim() : null))
     }
 
+    if (draft.cyclic) chain.cyclic = true
+
     return chain
   }
 
   if (draft.moleculeType === 'rna') {
     const chain: RnaChain = { molecule_type: 'rna', chain_ids: chainIds, sequence: draft.sequence.trim() }
-    if (!draft.useMsas) chain.use_msas = false
-    if (!draft.useMainMsas) chain.use_main_msas = false
     const mainMsa = toStrOrList(parseList(draft.mainMsaFilePaths))
     if (mainMsa) chain.main_msa_file_paths = mainMsa
+    if (draft.cyclic) chain.cyclic = true
     return chain
   }
 
   if (draft.moleculeType === 'dna') {
     const chain: DnaChain = { molecule_type: 'dna', chain_ids: chainIds, sequence: draft.sequence.trim() }
+    if (draft.cyclic) chain.cyclic = true
     return chain
   }
 
   const chain: LigandChain = { molecule_type: 'ligand', chain_ids: chainIds }
   if (draft.ligandMode === 'smiles') {
     chain.smiles = draft.smiles.trim()
-  } else {
+  } else if (draft.ligandMode === 'ccd') {
     const codes = toStrOrList(parseList(draft.ccdCodes))
     if (codes) chain.ccd_codes = codes
+  } else {
+    if (draft.sdfFilePath.trim()) chain.sdf_file_path = draft.sdfFilePath.trim()
   }
   return chain
 }
 
 export function serializeQuery(draft: QueryDraft): Of3Query {
   const query: Of3Query = { chains: draft.chains.map(serializeChain) }
+
+  if (!draft.useMsas) query.use_msas = false
+  if (!draft.useMainMsas) query.use_main_msas = false
+  if (!draft.usePairedMsas) query.use_paired_msas = false
+
+  const bonds: Bond[] = draft.covalentBonds
+    .filter(
+      (row) =>
+        row.chain1.trim() && row.residue1.trim() && row.atom1.trim() && row.chain2.trim() && row.residue2.trim() && row.atom2.trim(),
+    )
+    .map((row): Bond => [
+      [row.chain1.trim(), Number(row.residue1), Number(row.atom1)] satisfies Atom,
+      [row.chain2.trim(), Number(row.residue2), Number(row.atom2)] satisfies Atom,
+    ])
+  if (bonds.length > 0) query.covalent_bonds = bonds
 
   if (draft.pocketConstraintEnabled) {
     const residues: [string, number][] = draft.pocketConstraint.residues
@@ -124,14 +141,12 @@ export function serializeQuery(draft: QueryDraft): Of3Query {
   return query
 }
 
-export function serializeInput(state: Pick<BuilderState, 'queries' | 'ccdFilePath'>): Of3Input {
+export function serializeInput(state: Pick<BuilderState, 'queries'>): Of3Input {
   const queries: Record<string, Of3Query> = {}
   for (const query of state.queries) {
     const key = query.key.trim() || query.uiId
     queries[key] = serializeQuery(query)
   }
 
-  const input: Of3Input = { queries }
-  if (state.ccdFilePath.trim()) input.ccd_file_path = state.ccdFilePath.trim()
-  return input
+  return { queries }
 }

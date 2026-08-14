@@ -107,6 +107,31 @@ describe('validateInput', () => {
     expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-residues-empty')
   })
 
+  it('flags a pocket constraint with no ligand chain selected', () => {
+    const query = validProteinLigandQuery()
+    query.pocketConstraintEnabled = true
+    query.pocketConstraint = { ligandChainId: '', residues: [{ chainId: 'A', residueId: '1' }], maxDistance: '' }
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-ligand-id-empty')
+  })
+
+  it('flags a non-positive pocket constraint max distance', () => {
+    const query = validProteinLigandQuery()
+    query.pocketConstraintEnabled = true
+    query.pocketConstraint = {
+      ligandChainId: 'L',
+      residues: [{ chainId: 'A', residueId: '1' }],
+      maxDistance: '-1',
+    }
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-max-distance-invalid')
+  })
+
+  it('flags a protein chain with both a template alignment file and template CIF files', () => {
+    const query = validProteinLigandQuery()
+    query.chains[0]!.templateAlignmentFilePath = '/path/to/alignment'
+    query.chains[0]!.templateCifRows = [{ path: '/path/to/template.cif', chainId: '' }]
+    expect(codesOf(validateInput({ queries: [query] }))).toContain('chain-template-conflict')
+  })
+
   it('accepts a well-formed pocket constraint', () => {
     const query = validProteinLigandQuery()
     query.pocketConstraintEnabled = true
@@ -123,6 +148,42 @@ describe('validateInput', () => {
     query.chains[0]!.nonCanonicalResidues = [{ index: '999', code: 'SEP' }]
     const issues = validateInput({ queries: [query] })
     const issue = issues.find((i) => i.code === 'non-canonical-residue-out-of-range')
+    expect(issue?.level).toBe('warning')
+  })
+
+  it('flags an SDF ligand as an error — OpenFold3 raises NotImplementedError for this', () => {
+    const query = validProteinLigandQuery()
+    query.chains[1]!.ligandMode = 'sdf'
+    query.chains[1]!.smiles = ''
+    query.chains[1]!.sdfFilePath = '/path/to/ligand.sdf'
+    const issues = validateInput({ queries: [query] })
+    const issue = issues.find((i) => i.code === 'ligand-sdf-not-implemented')
+    expect(issue?.level).toBe('error')
+  })
+
+  it('flags multiple CCD codes on one chain as an error — OpenFold3 raises NotImplementedError for this', () => {
+    const query = validProteinLigandQuery()
+    query.chains[1]!.ligandMode = 'ccd'
+    query.chains[1]!.smiles = ''
+    query.chains[1]!.ccdCodes = 'NAG, BMA'
+    const issues = validateInput({ queries: [query] })
+    const issue = issues.find((i) => i.code === 'ligand-multiple-ccd-not-implemented')
+    expect(issue?.level).toBe('error')
+  })
+
+  it('accepts a single CCD code on one chain', () => {
+    const query = validProteinLigandQuery()
+    query.chains[1]!.ligandMode = 'ccd'
+    query.chains[1]!.smiles = ''
+    query.chains[1]!.ccdCodes = 'NAG'
+    expect(codesOf(validateInput({ queries: [query] }))).not.toContain('ligand-multiple-ccd-not-implemented')
+  })
+
+  it('warns that covalent_bonds has no downstream effect in the current OpenFold3 release', () => {
+    const query = validProteinLigandQuery()
+    query.covalentBonds = [{ chain1: 'A', residue1: '1', atom1: '1', chain2: 'L', residue2: '1', atom2: '1' }]
+    const issues = validateInput({ queries: [query] })
+    const issue = issues.find((i) => i.code === 'covalent-bonds-no-effect')
     expect(issue?.level).toBe('warning')
   })
 })

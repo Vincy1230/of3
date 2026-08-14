@@ -20,6 +20,7 @@ const { t } = useI18n()
         :options="[
           { value: 'smiles', label: t('chain.ligandModeSmiles') },
           { value: 'ccd', label: t('chain.ligandModeCcd') },
+          { value: 'sdf', label: t('chain.ligandModeSdf') },
         ]"
       />
     </div>
@@ -28,10 +29,14 @@ const { t } = useI18n()
       <label>{{ t('chain.smilesLabel') }}</label>
       <input type="text" v-model="chain.smiles" placeholder="CC(=O)OC1C[NH+]2CCC1CC2" />
     </div>
-    <div v-else class="field">
+    <div v-else-if="chain.ligandMode === 'ccd'" class="field">
       <label>{{ t('chain.ccdCodesLabel') }}</label>
       <input type="text" v-model="chain.ccdCodes" placeholder="NAG" />
       <p class="hint">{{ t('chain.ccdCodesHint') }}</p>
+    </div>
+    <div v-else class="field">
+      <label>{{ t('chain.sdfFilePathLabel') }}</label>
+      <input type="text" v-model="chain.sdfFilePath" placeholder="/path/to/ligand.sdf" />
     </div>
   </div>
 </template>
