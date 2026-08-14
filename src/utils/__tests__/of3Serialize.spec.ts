@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from 'vitest'
 import { OF3_EXAMPLES } from '@/data/examples'
-import { deserializeInput, parseOf3Input } from '@/utils/of3Draft'
-import { serializeInput } from '@/utils/of3Serialize'
+import { createEmptyChain, deserializeInput, parseOf3Input } from '@/utils/of3Draft'
+import { serializeChain, serializeInput } from '@/utils/of3Serialize'
 import type { Of3Input } from '@/types/of3'
 
 function normalizeStrOrList<T>(value: T | T[]): T | T[] {
@@ -38,6 +38,24 @@ describe('serializeInput', () => {
       expect(output).toEqual(normalizeExpected(example.input))
     })
   }
+
+  it('omits required-but-empty fields on a freshly created chain, instead of emitting them as empty strings', () => {
+    const protein = createEmptyChain('protein')
+    const proteinOutput = serializeChain(protein)
+    expect(proteinOutput).not.toHaveProperty('chain_ids')
+    expect(proteinOutput).not.toHaveProperty('sequence')
+
+    const ligand = createEmptyChain('ligand')
+    const ligandOutput = serializeChain(ligand)
+    expect(ligandOutput).not.toHaveProperty('chain_ids')
+    expect(ligandOutput).not.toHaveProperty('smiles')
+
+    // Filling the field in should be exactly what makes it appear — the "explicit vs. absent" rule
+    // applies to required fields the same way it already does to optional ones.
+    protein.chainIds = 'A'
+    protein.sequence = 'ACDEFG'
+    expect(serializeChain(protein)).toMatchObject({ chain_ids: 'A', sequence: 'ACDEFG' })
+  })
 
   it('omits optional fields left at their defaults', () => {
     const draftState = deserializeInput(OF3_EXAMPLES[0]!.input)

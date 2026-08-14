@@ -117,14 +117,17 @@ function reconstructOrdered(
 }
 
 function computeChainFields(draft: ChainDraft): Record<string, unknown> {
-  const chainIds = toStrOrList(parseList(draft.chainIds)) ?? ''
   const fields: Record<string, unknown> = {
     molecule_type: draft.moleculeType,
-    chain_ids: chainIds,
+    // Required fields stay absent (not an empty string) until the user actually provides a value —
+    // same "explicit vs. absent" rule optional fields already follow. An incomplete required field
+    // is a validation error (see of3Validate.ts, which reads straight from the draft), not a reason
+    // to synthesize a placeholder value into the output.
+    chain_ids: toStrOrList(parseList(draft.chainIds)),
   }
 
   if (draft.moleculeType === 'protein') {
-    fields.sequence = draft.sequence.trim()
+    fields.sequence = draft.sequence.trim() || undefined
     fields.description = draft.description.trim() || undefined
     fields.non_canonical_residues = buildNonCanonicalResidues(draft.nonCanonicalResidues)
     fields.main_msa_file_paths = toStrOrList(parseList(draft.mainMsaFilePaths))
@@ -137,14 +140,14 @@ function computeChainFields(draft: ChainDraft): Record<string, unknown> {
     }
     fields.cyclic = draft.cyclic
   } else if (draft.moleculeType === 'rna') {
-    fields.sequence = draft.sequence.trim()
+    fields.sequence = draft.sequence.trim() || undefined
     fields.main_msa_file_paths = toStrOrList(parseList(draft.mainMsaFilePaths))
     fields.cyclic = draft.cyclic
   } else if (draft.moleculeType === 'dna') {
-    fields.sequence = draft.sequence.trim()
+    fields.sequence = draft.sequence.trim() || undefined
     fields.cyclic = draft.cyclic
   } else if (draft.ligandMode === 'smiles') {
-    fields.smiles = draft.smiles.trim()
+    fields.smiles = draft.smiles.trim() || undefined
   } else if (draft.ligandMode === 'ccd') {
     fields.ccd_codes = toStrOrList(parseList(draft.ccdCodes))
   } else {
