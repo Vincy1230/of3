@@ -4,6 +4,7 @@
 import type { MoleculeType } from '@/types/of3'
 import type { ChainDraft, CovalentBondRow, QueryDraft, RawShape } from '@/types/draft'
 import type { Issue } from './of3Validate'
+import { JsonObject, parseOrderedJson } from './orderedJsonParse'
 
 const MOLECULE_TYPES: MoleculeType[] = ['protein', 'rna', 'dna', 'ligand']
 
@@ -82,16 +83,60 @@ const CHAIN_MANAGED_FIELDS: Record<MoleculeType, Set<string>> = {
   ligand: new Set(['molecule_type', 'chain_ids', 'smiles', 'ccd_codes', 'sdf_file_path']),
 }
 
-/** Captures a RawShape from a live (possibly untyped/malformed) source object. */
-function captureRaw(obj: unknown, managedFields: Set<string>, schemaFields: Set<string>): RawShape {
-  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return emptyRaw()
-  const record = obj as Record<string, unknown>
-  const order = Object.keys(record)
+// Everything below reads from a "record-like" value that can be EITHER a plain JS object (an
+// `Of3Input`/`Of3Query`/`Chain` literal — from the built-in examples, a round-tripped
+// serializeInput() call, or a test fixture) OR a JsonObject/Map (from parseOrderedJson, which
+// parses pasted/edited JSON text — see the module doc comment on parseOf3Input). A plain object
+// can't preserve true key order for integer-like keys (JS always sorts those ascending,
+// independent of insertion order — see orderedJsonParse.ts), which is why parseOf3Input doesn't
+// just use JSON.parse; but callers that already have a trusted, well-formed plain object don't
+// need to route through the custom parser to use these functions.
+type RecordLike = Record<string, unknown> | JsonObject
+
+function asRecord(value: unknown): RecordLike | null {
+  if (value instanceof JsonObject) return value
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) return value as Record<string, unknown>
+  return null
+}
+
+function getField(record: RecordLike, key: string): unknown {
+  return record instanceof JsonObject ? record.get(key) : record[key]
+}
+
+function recordKeys(record: RecordLike): string[] {
+  return record instanceof JsonObject ? [...record.keys()] : Object.keys(record)
+}
+
+function recordEntries(record: RecordLike): [string, unknown][] {
+  return record instanceof JsonObject ? [...record.entries()] : Object.entries(record)
+}
+
+/** Recursively converts JsonObject (Map) nodes to plain objects. Extras are captured verbatim and
+ * handed to code (of3Serialize's reconstructOrdered/stringifyOrdered, tests, ...) that only knows
+ * about plain objects/arrays — this is the boundary where a parseOrderedJson value stops being
+ * "possibly a Map" and becomes an ordinary JS value again. The one guarantee this gives up is key
+ * order *inside* an extra field's own nested objects, if it has any with integer-like keys — an
+ * edge case deep inside a field this app doesn't otherwise understand the shape of. */
+function toPlainDeep(value: unknown): unknown {
+  if (value instanceof JsonObject) {
+    const obj: Record<string, unknown> = {}
+    for (const [k, v] of value) obj[k] = toPlainDeep(v)
+    return obj
+  }
+  if (Array.isArray(value)) return value.map(toPlainDeep)
+  return value
+}
+
+/** Captures a RawShape from a live (possibly untyped/malformed) source value. */
+function captureRaw(value: unknown, managedFields: Set<string>, schemaFields: Set<string>): RawShape {
+  const record = asRecord(value)
+  if (!record) return emptyRaw()
+  const order = recordKeys(record)
   const extras: Record<string, unknown> = {}
   const unrecognized: string[] = []
   for (const key of order) {
     if (!managedFields.has(key)) {
-      extras[key] = record[key]
+      extras[key] = toPlainDeep(getField(record, key))
       if (!schemaFields.has(key)) unrecognized.push(key)
     }
   }
@@ -159,8 +204,8 @@ function toRawList(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined
 }
 
 /**
@@ -175,61 +220,66 @@ function chainFromSpec(rawChain: unknown, index: number, queryKey: string, query
     issues.push({ level: 'error', code: 'chain-not-object', queryUiId, queryKey, params: { index: index + 1 } })
     return null
   }
-  if (!MOLECULE_TYPES.includes(chain.molecule_type as MoleculeType)) {
+  const moleculeTypeRaw = getField(chain, 'molecule_type')
+  if (!MOLECULE_TYPES.includes(moleculeTypeRaw as MoleculeType)) {
     issues.push({ level: 'error', code: 'chain-molecule-type-invalid', queryUiId, queryKey, params: { index: index + 1 } })
     return null
   }
-  const moleculeType = chain.molecule_type as MoleculeType
+  const moleculeType = moleculeTypeRaw as MoleculeType
 
   const draft = createEmptyChain(moleculeType)
   draft.raw = captureRaw(chain, CHAIN_MANAGED_FIELDS[moleculeType], CHAIN_KEYS)
-  draft.chainIds = toRawList(chain.chain_ids)
+  draft.chainIds = toRawList(getField(chain, 'chain_ids'))
 
   if (moleculeType === 'protein') {
-    draft.sequence = typeof chain.sequence === 'string' ? chain.sequence : ''
-    draft.description = typeof chain.description === 'string' ? chain.description : ''
-    draft.mainMsaFilePaths = toRawList(chain.main_msa_file_paths)
-    draft.pairedMsaFilePaths = toRawList(chain.paired_msa_file_paths)
-    draft.templateAlignmentFilePath = typeof chain.template_alignment_file_path === 'string' ? chain.template_alignment_file_path : ''
-    if (Array.isArray(chain.template_cif_paths)) {
-      const cifChainIdsRaw = chain.template_cif_chain_ids
+    draft.sequence = asString(getField(chain, 'sequence')) ?? ''
+    draft.description = asString(getField(chain, 'description')) ?? ''
+    draft.mainMsaFilePaths = toRawList(getField(chain, 'main_msa_file_paths'))
+    draft.pairedMsaFilePaths = toRawList(getField(chain, 'paired_msa_file_paths'))
+    draft.templateAlignmentFilePath = asString(getField(chain, 'template_alignment_file_path')) ?? ''
+    const templateCifPaths = getField(chain, 'template_cif_paths')
+    if (Array.isArray(templateCifPaths)) {
+      const cifChainIdsRaw = getField(chain, 'template_cif_chain_ids')
       const cifChainIds = Array.isArray(cifChainIdsRaw) ? cifChainIdsRaw : []
-      if (Array.isArray(cifChainIdsRaw) && cifChainIdsRaw.length !== chain.template_cif_paths.length) {
+      if (Array.isArray(cifChainIdsRaw) && cifChainIdsRaw.length !== templateCifPaths.length) {
         draft.templateCifLengthMismatch = true
       }
-      draft.templateCifRows = chain.template_cif_paths.map((path, i) => ({
+      draft.templateCifRows = templateCifPaths.map((path, i) => ({
         path: typeof path === 'string' ? path : '',
         chainId: typeof cifChainIds[i] === 'string' ? (cifChainIds[i] as string) : '',
       }))
     }
-    const nonCanonical = asRecord(chain.non_canonical_residues)
+    const nonCanonical = asRecord(getField(chain, 'non_canonical_residues'))
     if (nonCanonical) {
-      draft.nonCanonicalResidues = Object.entries(nonCanonical).map(([index2, code]) => ({
+      draft.nonCanonicalResidues = recordEntries(nonCanonical).map(([index2, code]) => ({
         index: index2,
         code: typeof code === 'string' ? code : '',
       }))
     }
-    draft.cyclic = chain.cyclic === true
+    draft.cyclic = getField(chain, 'cyclic') === true
   } else if (moleculeType === 'rna') {
-    draft.sequence = typeof chain.sequence === 'string' ? chain.sequence : ''
-    draft.mainMsaFilePaths = toRawList(chain.main_msa_file_paths)
-    draft.cyclic = chain.cyclic === true
+    draft.sequence = asString(getField(chain, 'sequence')) ?? ''
+    draft.mainMsaFilePaths = toRawList(getField(chain, 'main_msa_file_paths'))
+    draft.cyclic = getField(chain, 'cyclic') === true
   } else if (moleculeType === 'dna') {
-    draft.sequence = typeof chain.sequence === 'string' ? chain.sequence : ''
-    draft.cyclic = chain.cyclic === true
+    draft.sequence = asString(getField(chain, 'sequence')) ?? ''
+    draft.cyclic = getField(chain, 'cyclic') === true
   } else {
-    const identifierCount = [chain.smiles, chain.ccd_codes, chain.sdf_file_path].filter((v) => v !== undefined).length
+    const smiles = getField(chain, 'smiles')
+    const ccdCodes = getField(chain, 'ccd_codes')
+    const sdfFilePath = getField(chain, 'sdf_file_path')
+    const identifierCount = [smiles, ccdCodes, sdfFilePath].filter((v) => v !== undefined).length
     if (identifierCount > 1) draft.ligandIdentifierConflict = true
 
-    if (typeof chain.smiles === 'string' && chain.smiles) {
+    if (typeof smiles === 'string' && smiles) {
       draft.ligandMode = 'smiles'
-      draft.smiles = chain.smiles
-    } else if (chain.ccd_codes) {
+      draft.smiles = smiles
+    } else if (ccdCodes) {
       draft.ligandMode = 'ccd'
-      draft.ccdCodes = toRawList(chain.ccd_codes)
-    } else if (typeof chain.sdf_file_path === 'string' && chain.sdf_file_path) {
+      draft.ccdCodes = toRawList(ccdCodes)
+    } else if (typeof sdfFilePath === 'string' && sdfFilePath) {
       draft.ligandMode = 'sdf'
-      draft.sdfFilePath = chain.sdf_file_path
+      draft.sdfFilePath = sdfFilePath
     }
   }
 
@@ -263,10 +313,11 @@ function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraf
   const draft = createEmptyQuery(key)
   draft.raw = captureRaw(query, QUERY_MANAGED_FIELDS, QUERY_KEYS)
 
-  if (!Array.isArray(query.chains)) {
+  const rawChains = getField(query, 'chains')
+  if (!Array.isArray(rawChains)) {
     issues.push({ level: 'error', code: 'query-chains-invalid', queryUiId: draft.uiId, queryKey: key })
   } else {
-    draft.chains = query.chains
+    draft.chains = rawChains
       .map((rawChain, i) => {
         const fresh = chainFromSpec(rawChain, i, key, draft.uiId, issues)
         if (!fresh) return null
@@ -276,16 +327,17 @@ function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraf
       .filter((c): c is ChainDraft => c !== null)
   }
 
-  draft.useMsas = query.use_msas !== false
-  draft.useMainMsas = query.use_main_msas !== false
-  draft.usePairedMsas = query.use_paired_msas !== false
+  draft.useMsas = getField(query, 'use_msas') !== false
+  draft.useMainMsas = getField(query, 'use_main_msas') !== false
+  draft.usePairedMsas = getField(query, 'use_paired_msas') !== false
 
-  if (Array.isArray(query.covalent_bonds)) {
+  const rawBonds = getField(query, 'covalent_bonds')
+  if (Array.isArray(rawBonds)) {
     const asAtom = (value: unknown): [string, unknown, unknown] | null => {
       if (!Array.isArray(value)) return null
       return [typeof value[0] === 'string' ? value[0] : '', value[1], value[2]]
     }
-    draft.covalentBonds = query.covalent_bonds
+    draft.covalentBonds = rawBonds
       .map((bond): CovalentBondRow | null => {
         if (!Array.isArray(bond) || bond.length !== 2) return null
         const atom1 = asAtom(bond[0])
@@ -303,26 +355,31 @@ function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraf
       .filter((b): b is CovalentBondRow => b !== null)
   }
 
-  draft.pocketConstraintEnabled = query.pocket_constraint !== undefined
-  const pocket = asRecord(query.pocket_constraint)
+  const rawPocketConstraint = getField(query, 'pocket_constraint')
+  draft.pocketConstraintEnabled = rawPocketConstraint !== undefined
+  const pocket = asRecord(rawPocketConstraint)
   if (pocket) {
     // pocket_constraint's content validity (blank ligand_chain_id, empty/malformed
     // pocket_residues) is intentionally NOT checked here — validateInput catches it on the draft
     // instead, the same way it would for a hand-built pocket constraint.
-    const rawResidues = Array.isArray(pocket.pocket_residues) ? pocket.pocket_residues : []
+    const rawResidues = getField(pocket, 'pocket_residues')
+    const residueEntries = Array.isArray(rawResidues) ? rawResidues : []
     draft.pocketConstraint = {
       raw: captureRaw(pocket, POCKET_CONSTRAINT_MANAGED_FIELDS, POCKET_CONSTRAINT_KEYS),
-      ligandChainId: typeof pocket.ligand_chain_id === 'string' ? pocket.ligand_chain_id : '',
-      residues: rawResidues.map((entry) => {
+      ligandChainId: asString(getField(pocket, 'ligand_chain_id')) ?? '',
+      residues: residueEntries.map((entry) => {
         const [chainId, residueId] = Array.isArray(entry) ? entry : []
         return {
           chainId: typeof chainId === 'string' ? chainId : '',
           residueId: residueId !== undefined && residueId !== null ? String(residueId) : '',
         }
       }),
-      maxDistance: pocket.max_distance !== undefined ? String(pocket.max_distance) : '',
+      maxDistance: (() => {
+        const maxDistance = getField(pocket, 'max_distance')
+        return maxDistance !== undefined ? String(maxDistance) : ''
+      })(),
     }
-  } else if (query.pocket_constraint !== undefined) {
+  } else if (rawPocketConstraint !== undefined) {
     // Present but not an object at all — nothing more specific to say than "empty"; validateInput's
     // pocket-ligand-id-empty / pocket-residues-empty already cover that.
     draft.pocketConstraint = { raw: emptyRaw(), ligandChainId: '', residues: [], maxDistance: '' }
@@ -357,7 +414,7 @@ export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] 
   }
   const rootRaw = captureRaw(root, ROOT_MANAGED_FIELDS, ROOT_KEYS)
 
-  const rawQueries = asRecord(root.queries)
+  const rawQueries = asRecord(getField(root, 'queries'))
   if (!rawQueries) {
     issues.push({ level: 'error', code: 'queries-invalid' })
     return { queries: [], rootRaw, issues }
@@ -365,7 +422,7 @@ export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] 
 
   const previousByKey = new Map(previousQueries.map((q) => [q.key, q]))
   const queries: QueryDraft[] = []
-  for (const [key, rawQuery] of Object.entries(rawQueries)) {
+  for (const [key, rawQuery] of recordEntries(rawQueries)) {
     const existing = previousByKey.get(key)
     const fresh = queryFromSpec(key, rawQuery, existing?.chains ?? [], issues)
     if (!fresh) continue
@@ -388,10 +445,15 @@ export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] 
  * validation panel, exactly the way a hand-built form mistake would be — so the JSON panel and the
  * validation panel each own exactly one thing: is this valid JSON text, and is the resulting input
  * correct.
+ *
+ * Uses the custom parseOrderedJson (see orderedJsonParse.ts) instead of native JSON.parse, because
+ * JSON.parse can't preserve source key order for keys that look like integers — a residue index in
+ * non_canonical_residues, or a numeric-looking query key — and there's no way to recover that
+ * order afterward once a plain JS object has been built.
  */
 export function parseOf3Input(text: string): unknown {
   try {
-    return JSON.parse(text)
+    return parseOrderedJson(text)
   } catch (err) {
     throw new Error(err instanceof Error ? err.message : String(err))
   }

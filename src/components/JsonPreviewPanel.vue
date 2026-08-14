@@ -7,12 +7,13 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOf3BuilderStore } from '@/stores/of3Builder'
 import { highlightJson } from '@/utils/jsonHighlight'
+import { stringifyOrdered } from '@/utils/orderedJson'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 
 const { t } = useI18n()
 const store = useOf3BuilderStore()
 
-const jsonText = computed(() => JSON.stringify(store.output, null, 2))
+const jsonText = computed(() => stringifyOrdered(store.output, 2))
 const highlighted = computed(() => highlightJson(jsonText.value))
 const copied = ref(false)
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
