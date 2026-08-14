@@ -139,6 +139,34 @@ describe('serializeInput', () => {
     })
   })
 
+  it('keeps optional fields that were explicitly set to their default value in the source JSON', () => {
+    const text = JSON.stringify({
+      queries: {
+        demo: {
+          use_msas: true,
+          use_main_msas: true,
+          use_paired_msas: true,
+          chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', cyclic: false }],
+          pocket_constraint: {
+            ligand_chain_id: 'L',
+            pocket_residues: [['A', 1]],
+            max_distance: 4.0,
+          },
+        },
+      },
+    })
+    const draftState = deserializeInput(parseOf3Input(text))
+
+    // Unrelated edit, same as above — should not cause these explicit defaults to be dropped.
+    draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
+
+    const output = serializeInput(draftState)
+    const query = output.queries.demo!
+    expect(query).toMatchObject({ use_msas: true, use_main_msas: true, use_paired_msas: true })
+    expect(query.chains[0]).toMatchObject({ cyclic: false })
+    expect(query.pocket_constraint).toMatchObject({ max_distance: 4 })
+  })
+
   it('preserves fields this app does not model (query_name, template_entry_chain_ids, root-level extras) untouched through an edit', () => {
     const text = JSON.stringify({
       ccd_file_path: '/some/ccd.cif',

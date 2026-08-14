@@ -3,6 +3,7 @@
 
 import type { Atom, Bond, Chain, MoleculeType, Of3Input, Of3Query } from '@/types/of3'
 import type { BuilderState, ChainDraft, QueryDraft, RawShape } from '@/types/draft'
+import { markOrdered } from './orderedJson'
 
 const DEFAULT_MAX_DISTANCE = 4.0
 
@@ -31,6 +32,15 @@ const QUERY_CANONICAL_ORDER = ['chains', 'use_msas', 'use_main_msas', 'use_paire
 const POCKET_CONSTRAINT_CANONICAL_ORDER = ['ligand_chain_id', 'pocket_residues', 'max_distance']
 const ROOT_CANONICAL_ORDER = ['queries']
 
+// OpenFold3's own defaults for fields that are genuinely optional-with-a-meaningful-default (as
+// opposed to optional-and-empty-means-absent, like a file path). Only used by reconstructOrdered
+// to skip boilerplate on a field this app is introducing fresh (not present in raw.order) — a
+// field the source JSON already had gets kept at its explicit value regardless of what that value
+// is, default or not; see reconstructOrdered.
+const CHAIN_DEFAULTS = { cyclic: false }
+const QUERY_DEFAULTS = { use_msas: true, use_main_msas: true, use_paired_msas: true }
+const POCKET_CONSTRAINT_DEFAULTS = { max_distance: DEFAULT_MAX_DISTANCE }
+
 function parseList(raw: string): string[] {
   return raw
     .split(/[,\n]/)
@@ -45,12 +55,18 @@ function toStrOrList(items: string[]): string | string[] | undefined {
 
 function buildNonCanonicalResidues(rows: ChainDraft['nonCanonicalResidues']): Record<string, string> | undefined {
   const dict: Record<string, string> = {}
+  const order: string[] = []
   for (const row of rows) {
     const index = row.index.trim()
     const code = row.code.trim()
-    if (index && code) dict[index] = code
+    if (!index || !code) continue
+    if (!(index in dict)) order.push(index)
+    dict[index] = code
   }
-  return Object.keys(dict).length > 0 ? dict : undefined
+  // Residue indices are always integer-looking, and plain objects (JSON.stringify included)
+  // always enumerate those in ascending numeric order regardless of insertion order — mark the
+  // real order explicitly so the JSON panel's display text doesn't silently resort these.
+  return order.length > 0 ? markOrdered(dict, order) : undefined
 }
 
 /**
@@ -61,8 +77,20 @@ function buildNonCanonicalResidues(rows: ChainDraft['nonCanonicalResidues']): Re
  * no prior shape (raw.order === []) — i.e. built from scratch in the UI — and for managed fields
  * that are newly introduced into an otherwise-imported object (appended at the end, never
  * inserted into the middle of the original order).
+ *
+ * `defaults` is ONLY consulted for fields being introduced fresh (not in raw.order) — it's what
+ * keeps hand-built-through-the-form output from being cluttered with boilerplate like
+ * `"cyclic": false`. A field the source JSON already had explicitly is always kept at its current
+ * value, even if that value happens to equal the default — the user wrote it on purpose, and
+ * "explicitly set to the default" and "never mentioned" are different states that shouldn't
+ * collapse into the same output.
  */
-function reconstructOrdered(raw: RawShape, managedValues: Record<string, unknown>, canonicalOrder: string[]): Record<string, unknown> {
+function reconstructOrdered(
+  raw: RawShape,
+  managedValues: Record<string, unknown>,
+  canonicalOrder: string[],
+  defaults: Record<string, unknown> = {},
+): Record<string, unknown> {
   const result: Record<string, unknown> = {}
   const seen = new Set<string>()
 
@@ -80,7 +108,9 @@ function reconstructOrdered(raw: RawShape, managedValues: Record<string, unknown
   for (const key of canonicalOrder) {
     if (seen.has(key)) continue
     const value = managedValues[key]
-    if (value !== undefined) result[key] = value
+    if (value === undefined) continue
+    if (key in defaults && value === defaults[key]) continue
+    result[key] = value
   }
 
   return result
@@ -105,14 +135,14 @@ function computeChainFields(draft: ChainDraft): Record<string, unknown> {
       fields.template_cif_paths = cifRows.map((row) => row.path.trim())
       fields.template_cif_chain_ids = cifRows.map((row) => (row.chainId.trim() ? row.chainId.trim() : null))
     }
-    fields.cyclic = draft.cyclic ? true : undefined
+    fields.cyclic = draft.cyclic
   } else if (draft.moleculeType === 'rna') {
     fields.sequence = draft.sequence.trim()
     fields.main_msa_file_paths = toStrOrList(parseList(draft.mainMsaFilePaths))
-    fields.cyclic = draft.cyclic ? true : undefined
+    fields.cyclic = draft.cyclic
   } else if (draft.moleculeType === 'dna') {
     fields.sequence = draft.sequence.trim()
-    fields.cyclic = draft.cyclic ? true : undefined
+    fields.cyclic = draft.cyclic
   } else if (draft.ligandMode === 'smiles') {
     fields.smiles = draft.smiles.trim()
   } else if (draft.ligandMode === 'ccd') {
@@ -126,7 +156,7 @@ function computeChainFields(draft: ChainDraft): Record<string, unknown> {
 
 export function serializeChain(draft: ChainDraft): Chain {
   const fields = computeChainFields(draft)
-  return reconstructOrdered(draft.raw, fields, CHAIN_CANONICAL_ORDER[draft.moleculeType]) as unknown as Chain
+  return reconstructOrdered(draft.raw, fields, CHAIN_CANONICAL_ORDER[draft.moleculeType], CHAIN_DEFAULTS) as unknown as Chain
 }
 
 function serializePocketConstraint(draft: QueryDraft): Record<string, unknown> | undefined {
@@ -140,22 +170,20 @@ function serializePocketConstraint(draft: QueryDraft): Record<string, unknown> |
     ligand_chain_id: draft.pocketConstraint.ligandChainId.trim(),
     pocket_residues: residues,
   }
-  const maxDistance = Number(draft.pocketConstraint.maxDistance)
-  fields.max_distance =
-    draft.pocketConstraint.maxDistance.trim() && !Number.isNaN(maxDistance) && maxDistance !== DEFAULT_MAX_DISTANCE
-      ? maxDistance
-      : undefined
+  const maxDistanceRaw = draft.pocketConstraint.maxDistance.trim()
+  const maxDistance = Number(maxDistanceRaw)
+  fields.max_distance = maxDistanceRaw && !Number.isNaN(maxDistance) ? maxDistance : undefined
 
-  return reconstructOrdered(draft.pocketConstraint.raw, fields, POCKET_CONSTRAINT_CANONICAL_ORDER)
+  return reconstructOrdered(draft.pocketConstraint.raw, fields, POCKET_CONSTRAINT_CANONICAL_ORDER, POCKET_CONSTRAINT_DEFAULTS)
 }
 
 function computeQueryFields(draft: QueryDraft): Record<string, unknown> {
   const fields: Record<string, unknown> = {
     chains: draft.chains.map(serializeChain),
   }
-  fields.use_msas = draft.useMsas ? undefined : false
-  fields.use_main_msas = draft.useMainMsas ? undefined : false
-  fields.use_paired_msas = draft.usePairedMsas ? undefined : false
+  fields.use_msas = draft.useMsas
+  fields.use_main_msas = draft.useMainMsas
+  fields.use_paired_msas = draft.usePairedMsas
 
   const bonds: Bond[] = draft.covalentBonds
     .filter(
@@ -177,15 +205,20 @@ function computeQueryFields(draft: QueryDraft): Record<string, unknown> {
 
 export function serializeQuery(draft: QueryDraft): Of3Query {
   const fields = computeQueryFields(draft)
-  return reconstructOrdered(draft.raw, fields, QUERY_CANONICAL_ORDER) as unknown as Of3Query
+  return reconstructOrdered(draft.raw, fields, QUERY_CANONICAL_ORDER, QUERY_DEFAULTS) as unknown as Of3Query
 }
 
 export function serializeInput(state: Pick<BuilderState, 'queries' | 'rootRaw'>): Of3Input {
   const queries: Record<string, Of3Query> = {}
+  const order: string[] = []
   for (const query of state.queries) {
     const key = query.key.trim() || query.uiId
+    if (!(key in queries)) order.push(key)
     queries[key] = serializeQuery(query)
   }
+  // Query keys can look like plain integers ("1", "2", ...) — mark the real insertion order
+  // explicitly, same reasoning as buildNonCanonicalResidues above.
+  markOrdered(queries, order)
 
   const fields: Record<string, unknown> = { queries }
   return reconstructOrdered(state.rootRaw, fields, ROOT_CANONICAL_ORDER) as unknown as Of3Input
