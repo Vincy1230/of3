@@ -19,9 +19,9 @@ const { t } = useI18n()
       <p class="hint">{{ t('chain.sequenceHintRna') }}</p>
     </div>
 
-    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed>
-      <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
+    <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
 
+    <CollapsibleSection :title="t('chain.advancedTitle')" default-collapsed>
       <div class="field">
         <label>{{ t('chain.mainMsaPathsLabel') }}</label>
         <textarea v-model="chain.mainMsaFilePaths" rows="2"></textarea>
