@@ -16,9 +16,6 @@ function minimalQueryJson(overrides: Record<string, unknown> = {}) {
   })
 }
 
-/** Runs the same pipeline the app uses for a pasted/edited JSON: parse -> deserialize -> validate,
- * merging the structural issues deserializeInput found with validateInput's content issues —
- * exactly what the store does. */
 function importAndValidate(text: string): Issue[] {
   const parsed = parseOf3Input(text)
   const state = deserializeInput(parsed)
@@ -69,7 +66,9 @@ describe('deserializeInput — structural problems degrade to issues instead of 
       ),
     )
     expect(state.queries.map((q) => q.key)).toEqual(['good'])
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'queryNotObject', queryKey: 'bad' }))
+    expect(state.issues).toContainEqual(
+      expect.objectContaining({ code: 'queryNotObject', queryKey: 'bad' }),
+    )
   })
 
   it('flags a query with a missing/invalid "chains" array instead of throwing', () => {
@@ -84,34 +83,53 @@ describe('deserializeInput — structural problems degrade to issues instead of 
       parseOf3Input(
         JSON.stringify({
           queries: {
-            query_1: { chains: ['not an object', { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG' }] },
+            query_1: {
+              chains: [
+                'not an object',
+                { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG' },
+              ],
+            },
           },
         }),
       ),
     )
     expect(state.queries[0]!.chains).toHaveLength(1)
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chainNotObject', params: { index: 1 } }))
+    expect(state.issues).toContainEqual(
+      expect.objectContaining({ code: 'chainNotObject', params: { index: 1 } }),
+    )
   })
 
   it('drops a chain with a missing/invalid molecule_type and flags it', () => {
     const state = deserializeInput(
-      parseOf3Input(JSON.stringify({ queries: { query_1: { chains: [{ chain_ids: 'A', sequence: 'ACDEFG' }] } } })),
+      parseOf3Input(
+        JSON.stringify({
+          queries: { query_1: { chains: [{ chain_ids: 'A', sequence: 'ACDEFG' }] } },
+        }),
+      ),
     )
     expect(state.queries[0]!.chains).toHaveLength(0)
-    expect(state.issues).toContainEqual(expect.objectContaining({ code: 'chainMoleculeTypeInvalid', params: { index: 1 } }))
+    expect(state.issues).toContainEqual(
+      expect.objectContaining({ code: 'chainMoleculeTypeInvalid', params: { index: 1 } }),
+    )
   })
 })
 
 describe('unrecognized fields — reported through validateInput, at OpenFold3-matching severity', () => {
   it('warns on root-level "seeds"', () => {
     const issues = importAndValidate(minimalQueryJson({ seeds: [42] }))
-    expect(issues).toContainEqual(expect.objectContaining({ level: 'warning', code: 'rootSeedsField' }))
+    expect(issues).toContainEqual(
+      expect.objectContaining({ level: 'warning', code: 'rootSeedsField' }),
+    )
   })
 
   it('warns on ccd_file_path at root — the docs list it, but InferenceQuerySet does not declare it', () => {
     const issues = importAndValidate(minimalQueryJson({ ccd_file_path: '/tmp/ccd' }))
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'warning', code: 'rootUnrecognizedField', params: { field: 'ccd_file_path' } }),
+      expect.objectContaining({
+        level: 'warning',
+        code: 'rootUnrecognizedField',
+        params: { field: 'ccd_file_path' },
+      }),
     )
   })
 
@@ -132,22 +150,41 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
 
   it('warns on an unrecognized query-level field', () => {
     const text = JSON.stringify({
-      queries: { query_1: { chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG' }], made_up: 1 } },
+      queries: {
+        query_1: {
+          chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG' }],
+          made_up: 1,
+        },
+      },
     })
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'warning', code: 'queryUnrecognizedField', params: { field: 'made_up' } }),
+      expect.objectContaining({
+        level: 'warning',
+        code: 'queryUnrecognizedField',
+        params: { field: 'made_up' },
+      }),
     )
   })
 
   it('does not block on an unrecognized chain-level field — errors, but through validateInput', () => {
     const text = JSON.stringify({
-      queries: { query_1: { chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', made_up_field: 1 }] } },
+      queries: {
+        query_1: {
+          chains: [
+            { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', made_up_field: 1 },
+          ],
+        },
+      },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'error', code: 'chainUnrecognizedField', params: { field: 'made_up_field' } }),
+      expect.objectContaining({
+        level: 'error',
+        code: 'chainUnrecognizedField',
+        params: { field: 'made_up_field' },
+      }),
     )
   })
 
@@ -155,7 +192,11 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
     // Chain is one pydantic model shared by every molecule_type — "smiles" on a protein chain
     // is unused, not rejected, since OpenFold3 doesn't partition the field set per type.
     const text = JSON.stringify({
-      queries: { query_1: { chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', smiles: 'CCO' }] } },
+      queries: {
+        query_1: {
+          chains: [{ molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG', smiles: 'CCO' }],
+        },
+      },
     })
     const issues = importAndValidate(text)
     expect(issues.map((i) => i.code)).not.toContain('chainUnrecognizedField')
@@ -169,14 +210,22 @@ describe('unrecognized fields — reported through validateInput, at OpenFold3-m
             { molecule_type: 'protein', chain_ids: 'A', sequence: 'ACDEFG' },
             { molecule_type: 'ligand', chain_ids: 'L', smiles: 'CCO' },
           ],
-          pocket_constraint: { ligand_chain_id: 'L', pocket_residues: [['A', 1]], extra_threshold: 9 },
+          pocket_constraint: {
+            ligand_chain_id: 'L',
+            pocket_residues: [['A', 1]],
+            extra_threshold: 9,
+          },
         },
       },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
     const issues = importAndValidate(text)
     expect(issues).toContainEqual(
-      expect.objectContaining({ level: 'error', code: 'pocketConstraintUnrecognizedField', params: { field: 'extra_threshold' } }),
+      expect.objectContaining({
+        level: 'error',
+        code: 'pocketConstraintUnrecognizedField',
+        params: { field: 'extra_threshold' },
+      }),
     )
   })
 })
@@ -224,7 +273,11 @@ describe('content problems that used to block are now reported through validateI
 
   it('a ligand chain specifying both smiles and ccd_codes', () => {
     const text = JSON.stringify({
-      queries: { query_1: { chains: [{ molecule_type: 'ligand', chain_ids: 'L', smiles: 'CCO', ccd_codes: 'NAG' }] } },
+      queries: {
+        query_1: {
+          chains: [{ molecule_type: 'ligand', chain_ids: 'L', smiles: 'CCO', ccd_codes: 'NAG' }],
+        },
+      },
     })
     expect(() => parseOf3Input(text)).not.toThrow()
     expect(importAndValidate(text).map((i) => i.code)).toContain('ligandIdentifierConflict')

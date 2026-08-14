@@ -43,7 +43,11 @@ describe('order preservation for the two dictionaries JS silently resorts (integ
     const parsedBack = JSON.parse(rendered)
     // The parsed-back value is a plain object again (so this assertion alone wouldn't catch a
     // regression) — the real assertion is the literal text order below.
-    expect(parsedBack.queries.demo.chains[0].non_canonical_residues).toEqual({ '1': 'PTR', '3': 'MHO', '12': 'SEP' })
+    expect(parsedBack.queries.demo.chains[0].non_canonical_residues).toEqual({
+      '1': 'PTR',
+      '3': 'MHO',
+      '12': 'SEP',
+    })
     const residueBlock = rendered.slice(rendered.indexOf('"non_canonical_residues"'))
     expect(residueBlock.indexOf('"12"')).toBeLessThan(residueBlock.indexOf('"3"'))
     expect(residueBlock.indexOf('"3"')).toBeLessThan(residueBlock.indexOf('"1"'))

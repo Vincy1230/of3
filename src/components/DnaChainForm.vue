@@ -17,7 +17,9 @@ const { t } = useI18n()
       <textarea v-model="chain.sequence" rows="3" placeholder="GACCTCT"></textarea>
       <p class="hint">{{ t('chain.sequenceHintDna') }}</p>
     </div>
-    <label class="checkbox-field"><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label>
+    <label class="checkbox-field"
+      ><input type="checkbox" v-model="chain.cyclic" /> {{ t('chain.cyclic') }}</label
+    >
   </div>
 </template>
 

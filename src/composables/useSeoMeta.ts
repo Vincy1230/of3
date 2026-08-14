@@ -2,7 +2,15 @@
 // Email: vincy@vincy1230.net
 
 import { i18n, LOCALE_PATHS, SUPPORTED_LOCALES, type SupportedLocale } from '@/locales'
-import { SITE_URL, OG_IMAGE, TITLES, OG_LOCALE, HREFLANG, KEYWORDS, DEFAULT_LOCALE } from '@/seo/meta.mjs'
+import {
+  SITE_URL,
+  OG_IMAGE,
+  TITLES,
+  OG_LOCALE,
+  HREFLANG,
+  KEYWORDS,
+  DEFAULT_LOCALE,
+} from '@/seo/meta.mjs'
 
 function setMeta(attr: 'name' | 'property', key: string, content: string) {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`)

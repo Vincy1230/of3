@@ -21,12 +21,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const distDir = path.resolve(__dirname, '../dist')
 
 function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 function replaceOrThrow(html, pattern, replacement, label) {
   if (!pattern.test(html)) {
-    throw new Error(`prerender-locales: 没能在 index.html 里找到需要替换的标签 (${label})`)
+    throw new Error(
+      `prerender-locales: Failed to find the tag to be replaced (${label}) in index.html`,
+    )
   }
   return html.replace(pattern, replacement)
 }
@@ -37,8 +43,18 @@ function renderForLocale(template, locale) {
   const url = `${SITE_URL}${LOCALE_PATHS[locale]}`
 
   let html = template
-  html = replaceOrThrow(html, /<html lang="[^"]*"/, `<html lang="${HTML_LANG[locale]}"`, 'html lang')
-  html = replaceOrThrow(html, /<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`, 'title')
+  html = replaceOrThrow(
+    html,
+    /<html lang="[^"]*"/,
+    `<html lang="${HTML_LANG[locale]}"`,
+    'html lang',
+  )
+  html = replaceOrThrow(
+    html,
+    /<title>[^<]*<\/title>/,
+    `<title>${escapeHtml(title)}</title>`,
+    'title',
+  )
   html = replaceOrThrow(
     html,
     /<meta name="description" content="[^"]*">/,

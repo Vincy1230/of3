@@ -64,7 +64,9 @@ function onRemove(uiId: string) {
     </div>
 
     <div class="toolbar">
-      <button type="button" class="btn btn-sm" @click="store.addQuery()">+ {{ t('query.addQuery') }}</button>
+      <button type="button" class="btn btn-sm" @click="store.addQuery()">
+        + {{ t('query.addQuery') }}
+      </button>
     </div>
   </CollapsibleSection>
 </template>

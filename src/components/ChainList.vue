@@ -87,7 +87,13 @@ function removeChain(chain: ChainDraft) {
     </div>
 
     <div class="toolbar">
-      <button v-for="type in MOLECULE_TYPES" :key="type" type="button" class="btn btn-sm" @click="addChain(type)">
+      <button
+        v-for="type in MOLECULE_TYPES"
+        :key="type"
+        type="button"
+        class="btn btn-sm"
+        @click="addChain(type)"
+      >
         + {{ t(`common.${type}`) }}
       </button>
     </div>

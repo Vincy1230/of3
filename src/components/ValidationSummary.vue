@@ -11,7 +11,8 @@ const { t } = useI18n()
 const store = useOf3BuilderStore()
 
 function context(issue: Issue): string {
-  if (issue.chainLabel) return t('validation.contextChain', { queryKey: issue.queryKey, chainLabel: issue.chainLabel })
+  if (issue.chainLabel)
+    return t('validation.contextChain', { queryKey: issue.queryKey, chainLabel: issue.chainLabel })
   if (issue.queryKey !== undefined) return t('validation.context', { queryKey: issue.queryKey })
   return ''
 }
@@ -28,7 +29,9 @@ function message(issue: Issue): string {
     <div v-else class="issue-list">
       <div v-for="(issue, index) in store.issues" :key="index" class="issue" :class="issue.level">
         <span>
-          <strong>{{ issue.level === 'error' ? t('validation.errorLabel') : t('validation.warningLabel') }}</strong>
+          <strong>{{
+            issue.level === 'error' ? t('validation.errorLabel') : t('validation.warningLabel')
+          }}</strong>
           — {{ message(issue) }}
           <span v-if="context(issue)" class="issue-context">{{ context(issue) }}</span>
         </span>

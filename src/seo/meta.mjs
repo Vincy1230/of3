@@ -27,8 +27,10 @@ export const DESCRIPTIONS = {
 }
 
 export const KEYWORDS = {
-  'zh-CN': 'OpenFold3, 结构预测, 蛋白质结构, JSON 生成器, 生物信息学, AlphaFold, 配体, MSA, Vincy, GitHub',
-  'zh-HK': 'OpenFold3, 結構預測, 蛋白質結構, JSON 產生器, 生物信息學, AlphaFold, 配體, MSA, Vincy, GitHub',
+  'zh-CN':
+    'OpenFold3, 结构预测, 蛋白质结构, JSON 生成器, 生物信息学, AlphaFold, 配体, MSA, Vincy, GitHub',
+  'zh-HK':
+    'OpenFold3, 結構預測, 蛋白質結構, JSON 產生器, 生物信息學, AlphaFold, 配體, MSA, Vincy, GitHub',
   en: 'OpenFold3, structure prediction, protein structure, JSON generator, bioinformatics, AlphaFold, ligand, MSA, Vincy, GitHub',
 }
 

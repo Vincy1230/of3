@@ -28,7 +28,14 @@ const CHAIN_CANONICAL_ORDER: Record<MoleculeType, string[]> = {
   dna: ['molecule_type', 'chain_ids', 'sequence', 'cyclic'],
   ligand: ['molecule_type', 'chain_ids', 'smiles', 'ccd_codes', 'sdf_file_path'],
 }
-const QUERY_CANONICAL_ORDER = ['chains', 'use_msas', 'use_main_msas', 'use_paired_msas', 'covalent_bonds', 'pocket_constraint']
+const QUERY_CANONICAL_ORDER = [
+  'chains',
+  'use_msas',
+  'use_main_msas',
+  'use_paired_msas',
+  'covalent_bonds',
+  'pocket_constraint',
+]
 const POCKET_CONSTRAINT_CANONICAL_ORDER = ['ligand_chain_id', 'pocket_residues', 'max_distance']
 const ROOT_CANONICAL_ORDER = ['queries']
 
@@ -53,7 +60,9 @@ function toStrOrList(items: string[]): string | string[] | undefined {
   return items.length === 1 ? items[0] : items
 }
 
-function buildNonCanonicalResidues(rows: ChainDraft['nonCanonicalResidues']): Record<string, string> | undefined {
+function buildNonCanonicalResidues(
+  rows: ChainDraft['nonCanonicalResidues'],
+): Record<string, string> | undefined {
   const dict: Record<string, string> = {}
   const order: string[] = []
   for (const row of rows) {
@@ -136,7 +145,9 @@ function computeChainFields(draft: ChainDraft): Record<string, unknown> {
     const cifRows = draft.templateCifRows.filter((row) => row.path.trim())
     if (cifRows.length > 0) {
       fields.template_cif_paths = cifRows.map((row) => row.path.trim())
-      fields.template_cif_chain_ids = cifRows.map((row) => (row.chainId.trim() ? row.chainId.trim() : null))
+      fields.template_cif_chain_ids = cifRows.map((row) =>
+        row.chainId.trim() ? row.chainId.trim() : null,
+      )
     }
     fields.cyclic = draft.cyclic
   } else if (draft.moleculeType === 'rna') {
@@ -159,7 +170,12 @@ function computeChainFields(draft: ChainDraft): Record<string, unknown> {
 
 export function serializeChain(draft: ChainDraft): Chain {
   const fields = computeChainFields(draft)
-  return reconstructOrdered(draft.raw, fields, CHAIN_CANONICAL_ORDER[draft.moleculeType], CHAIN_DEFAULTS) as unknown as Chain
+  return reconstructOrdered(
+    draft.raw,
+    fields,
+    CHAIN_CANONICAL_ORDER[draft.moleculeType],
+    CHAIN_DEFAULTS,
+  ) as unknown as Chain
 }
 
 function serializePocketConstraint(draft: QueryDraft): Record<string, unknown> | undefined {
@@ -177,7 +193,12 @@ function serializePocketConstraint(draft: QueryDraft): Record<string, unknown> |
   const maxDistance = Number(maxDistanceRaw)
   fields.max_distance = maxDistanceRaw && !Number.isNaN(maxDistance) ? maxDistance : undefined
 
-  return reconstructOrdered(draft.pocketConstraint.raw, fields, POCKET_CONSTRAINT_CANONICAL_ORDER, POCKET_CONSTRAINT_DEFAULTS)
+  return reconstructOrdered(
+    draft.pocketConstraint.raw,
+    fields,
+    POCKET_CONSTRAINT_CANONICAL_ORDER,
+    POCKET_CONSTRAINT_DEFAULTS,
+  )
 }
 
 function computeQueryFields(draft: QueryDraft): Record<string, unknown> {
@@ -191,14 +212,17 @@ function computeQueryFields(draft: QueryDraft): Record<string, unknown> {
   const bonds: Bond[] = draft.covalentBonds
     .filter(
       (row) =>
-        row.chain1.trim() && row.residue1.trim() && row.atom1.trim() && row.chain2.trim() && row.residue2.trim() && row.atom2.trim(),
+        row.chain1.trim() &&
+        row.residue1.trim() &&
+        row.atom1.trim() &&
+        row.chain2.trim() &&
+        row.residue2.trim() &&
+        row.atom2.trim(),
     )
-    .map(
-      (row): Bond => [
-        [row.chain1.trim(), Number(row.residue1), Number(row.atom1)] satisfies Atom,
-        [row.chain2.trim(), Number(row.residue2), Number(row.atom2)] satisfies Atom,
-      ],
-    )
+    .map((row): Bond => [
+      [row.chain1.trim(), Number(row.residue1), Number(row.atom1)] satisfies Atom,
+      [row.chain2.trim(), Number(row.residue2), Number(row.atom2)] satisfies Atom,
+    ])
   fields.covalent_bonds = bonds.length > 0 ? bonds : undefined
 
   fields.pocket_constraint = serializePocketConstraint(draft)
@@ -208,7 +232,12 @@ function computeQueryFields(draft: QueryDraft): Record<string, unknown> {
 
 export function serializeQuery(draft: QueryDraft): Of3Query {
   const fields = computeQueryFields(draft)
-  return reconstructOrdered(draft.raw, fields, QUERY_CANONICAL_ORDER, QUERY_DEFAULTS) as unknown as Of3Query
+  return reconstructOrdered(
+    draft.raw,
+    fields,
+    QUERY_CANONICAL_ORDER,
+    QUERY_DEFAULTS,
+  ) as unknown as Of3Query
 }
 
 export function serializeInput(state: Pick<BuilderState, 'queries' | 'rootRaw'>): Of3Input {

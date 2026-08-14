@@ -5,9 +5,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = withDefaults(defineProps<{ open: boolean; titleText: string; size?: 'default' | 'full' }>(), {
-  size: 'default',
-})
+const props = withDefaults(
+  defineProps<{ open: boolean; titleText: string; size?: 'default' | 'full' }>(),
+  {
+    size: 'default',
+  },
+)
 const emit = defineEmits<{ close: [] }>()
 
 const dialogRef = ref<HTMLDialogElement | null>(null)
@@ -21,7 +24,6 @@ watch(
     if (!isOpen && el.open) el.close()
   },
 )
-
 </script>
 
 <template>
@@ -34,7 +36,9 @@ watch(
   >
     <div class="modal-header">
       <h3>{{ titleText }}</h3>
-      <button type="button" class="close-btn" :aria-label="titleText" @click="emit('close')">×</button>
+      <button type="button" class="close-btn" :aria-label="titleText" @click="emit('close')">
+        ×
+      </button>
     </div>
     <div class="modal-body">
       <slot />

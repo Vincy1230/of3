@@ -58,7 +58,6 @@ export interface PocketConstraint {
 /** [chain_id, residue_id, atom_id] — atom_id indexes into the residue's canonical atom order. */
 export type Atom = [string, number, number]
 
-/** A covalent bond between two atoms, e.g. a disulfide bridge or a ligand-to-residue linkage. */
 export type Bond = [Atom, Atom]
 
 export interface Of3Query {

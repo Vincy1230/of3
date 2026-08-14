@@ -184,12 +184,16 @@ describe('validateInput', () => {
     query.chains[1]!.ligandMode = 'ccd'
     query.chains[1]!.smiles = ''
     query.chains[1]!.ccdCodes = 'NAG'
-    expect(codesOf(validateInput({ queries: [query] }))).not.toContain('ligandMultipleCcdNotImplemented')
+    expect(codesOf(validateInput({ queries: [query] }))).not.toContain(
+      'ligandMultipleCcdNotImplemented',
+    )
   })
 
   it('warns that covalent_bonds has no downstream effect in the current OpenFold3 release', () => {
     const query = validProteinLigandQuery()
-    query.covalentBonds = [{ chain1: 'A', residue1: '1', atom1: '1', chain2: 'L', residue2: '1', atom2: '1' }]
+    query.covalentBonds = [
+      { chain1: 'A', residue1: '1', atom1: '1', chain2: 'L', residue2: '1', atom2: '1' },
+    ]
     const issues = validateInput({ queries: [query] })
     const issue = issues.find((i) => i.code === 'covalentBondsNoEffect')
     expect(issue?.level).toBe('warning')

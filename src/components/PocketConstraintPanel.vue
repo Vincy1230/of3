@@ -42,7 +42,12 @@ function removeResidueRow(index: number) {
 </script>
 
 <template>
-  <CollapsibleSection v-if="activeQuery" :title="t('pocketConstraint.title')" default-collapsed :has-custom-values="hasCustomValues">
+  <CollapsibleSection
+    v-if="activeQuery"
+    :title="t('pocketConstraint.title')"
+    default-collapsed
+    :has-custom-values="hasCustomValues"
+  >
     <span class="chip">{{ activeQuery.key }}</span>
 
     <label class="checkbox-field">
@@ -66,15 +71,31 @@ function removeResidueRow(index: number) {
 
       <div class="repeatable">
         <h3>{{ t('pocketConstraint.residuesTitle') }}</h3>
-        <div v-for="(row, index) in activeQuery.pocketConstraint.residues" :key="index" class="repeatable-row">
-          <input type="text" v-model="row.chainId" :placeholder="t('pocketConstraint.residueChainLabel')" class="narrow" />
-          <input type="text" v-model="row.residueId" :placeholder="t('pocketConstraint.residueIdLabel')" class="narrow" />
+        <div
+          v-for="(row, index) in activeQuery.pocketConstraint.residues"
+          :key="index"
+          class="repeatable-row"
+        >
+          <input
+            type="text"
+            v-model="row.chainId"
+            :placeholder="t('pocketConstraint.residueChainLabel')"
+            class="narrow"
+          />
+          <input
+            type="text"
+            v-model="row.residueId"
+            :placeholder="t('pocketConstraint.residueIdLabel')"
+            class="narrow"
+          />
           <button type="button" class="btn btn-sm btn-danger" @click="removeResidueRow(index)">
             <IconTrash />
           </button>
         </div>
         <div class="toolbar">
-          <button type="button" class="btn btn-sm" @click="addResidueRow">+ {{ t('pocketConstraint.addResidueRow') }}</button>
+          <button type="button" class="btn btn-sm" @click="addResidueRow">
+            + {{ t('pocketConstraint.addResidueRow') }}
+          </button>
         </div>
       </div>
 

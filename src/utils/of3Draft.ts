@@ -59,8 +59,19 @@ const CHAIN_KEYS = new Set([
 // populated automatically" per the docs) — is captured as a RawShape "extra" instead: preserved
 // verbatim through every edit, never touched by the UI, because there's no form control for it.
 const ROOT_MANAGED_FIELDS = new Set(['queries'])
-const QUERY_MANAGED_FIELDS = new Set(['chains', 'pocket_constraint', 'use_msas', 'use_main_msas', 'use_paired_msas', 'covalent_bonds'])
-const POCKET_CONSTRAINT_MANAGED_FIELDS = new Set(['ligand_chain_id', 'pocket_residues', 'max_distance'])
+const QUERY_MANAGED_FIELDS = new Set([
+  'chains',
+  'pocket_constraint',
+  'use_msas',
+  'use_main_msas',
+  'use_paired_msas',
+  'covalent_bonds',
+])
+const POCKET_CONSTRAINT_MANAGED_FIELDS = new Set([
+  'ligand_chain_id',
+  'pocket_residues',
+  'max_distance',
+])
 // Chain fields ARE partitioned per molecule_type here (unlike CHAIN_KEYS above), so e.g. a stray
 // "smiles" that somehow ended up on an imported protein chain is preserved as an extra rather
 // than silently adopted as if the form had a control for it.
@@ -95,7 +106,8 @@ type RecordLike = Record<string, unknown> | JsonObject
 
 function asRecord(value: unknown): RecordLike | null {
   if (value instanceof JsonObject) return value
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) return value as Record<string, unknown>
+  if (typeof value === 'object' && value !== null && !Array.isArray(value))
+    return value as Record<string, unknown>
   return null
 }
 
@@ -127,8 +139,11 @@ function toPlainDeep(value: unknown): unknown {
   return value
 }
 
-/** Captures a RawShape from a live (possibly untyped/malformed) source value. */
-function captureRaw(value: unknown, managedFields: Set<string>, schemaFields: Set<string>): RawShape {
+function captureRaw(
+  value: unknown,
+  managedFields: Set<string>,
+  schemaFields: Set<string>,
+): RawShape {
   const record = asRecord(value)
   if (!record) return emptyRaw()
   const order = recordKeys(record)
@@ -200,7 +215,8 @@ export function createEmptyQuery(key: string): QueryDraft {
 // Never assumes its input actually has the declared shape — everything upstream of this file now
 // hands it whatever a user typed, unchecked, so every access is a runtime check, not a cast.
 function toRawList(value: unknown): string {
-  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string').join(', ')
+  if (Array.isArray(value))
+    return value.filter((v): v is string => typeof v === 'string').join(', ')
   return typeof value === 'string' ? value : ''
 }
 
@@ -214,15 +230,33 @@ function asString(value: unknown): string | undefined {
  * app has no "unknown chain" UI), so it's dropped and reported as a structural Issue instead of
  * blocking the whole import the way it used to.
  */
-function chainFromSpec(rawChain: unknown, index: number, queryKey: string, queryUiId: string | undefined, issues: Issue[]): ChainDraft | null {
+function chainFromSpec(
+  rawChain: unknown,
+  index: number,
+  queryKey: string,
+  queryUiId: string | undefined,
+  issues: Issue[],
+): ChainDraft | null {
   const chain = asRecord(rawChain)
   if (!chain) {
-    issues.push({ level: 'error', code: 'chainNotObject', queryUiId, queryKey, params: { index: index + 1 } })
+    issues.push({
+      level: 'error',
+      code: 'chainNotObject',
+      queryUiId,
+      queryKey,
+      params: { index: index + 1 },
+    })
     return null
   }
   const moleculeTypeRaw = getField(chain, 'molecule_type')
   if (!MOLECULE_TYPES.includes(moleculeTypeRaw as MoleculeType)) {
-    issues.push({ level: 'error', code: 'chainMoleculeTypeInvalid', queryUiId, queryKey, params: { index: index + 1 } })
+    issues.push({
+      level: 'error',
+      code: 'chainMoleculeTypeInvalid',
+      queryUiId,
+      queryKey,
+      params: { index: index + 1 },
+    })
     return null
   }
   const moleculeType = moleculeTypeRaw as MoleculeType
@@ -236,7 +270,8 @@ function chainFromSpec(rawChain: unknown, index: number, queryKey: string, query
     draft.description = asString(getField(chain, 'description')) ?? ''
     draft.mainMsaFilePaths = toRawList(getField(chain, 'main_msa_file_paths'))
     draft.pairedMsaFilePaths = toRawList(getField(chain, 'paired_msa_file_paths'))
-    draft.templateAlignmentFilePath = asString(getField(chain, 'template_alignment_file_path')) ?? ''
+    draft.templateAlignmentFilePath =
+      asString(getField(chain, 'template_alignment_file_path')) ?? ''
     const templateCifPaths = getField(chain, 'template_cif_paths')
     if (Array.isArray(templateCifPaths)) {
       const cifChainIdsRaw = getField(chain, 'template_cif_chain_ids')
@@ -303,7 +338,12 @@ function reconcileInto<T extends { uiId: string }>(existing: T, fresh: T): T {
  * chain. `existingChains` lets a chain at the same index keep its identity across a re-parse — see
  * reconcileInto.
  */
-function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraft[], issues: Issue[]): QueryDraft | null {
+function queryFromSpec(
+  key: string,
+  rawQuery: unknown,
+  existingChains: ChainDraft[],
+  issues: Issue[],
+): QueryDraft | null {
   const query = asRecord(rawQuery)
   if (!query) {
     issues.push({ level: 'error', code: 'queryNotObject', queryKey: key })
@@ -315,7 +355,12 @@ function queryFromSpec(key: string, rawQuery: unknown, existingChains: ChainDraf
 
   const rawChains = getField(query, 'chains')
   if (!Array.isArray(rawChains)) {
-    issues.push({ level: 'error', code: 'queryChainsInvalid', queryUiId: draft.uiId, queryKey: key })
+    issues.push({
+      level: 'error',
+      code: 'queryChainsInvalid',
+      queryUiId: draft.uiId,
+      queryKey: key,
+    })
   } else {
     draft.chains = rawChains
       .map((rawChain, i) => {
@@ -405,7 +450,10 @@ export interface DeserializeResult {
  * an object, degrades to an empty result plus a structural Issue rather than blocking the import —
  * see the module doc comment on parseOf3Input for why.
  */
-export function deserializeInput(parsed: unknown, previousQueries: QueryDraft[] = []): DeserializeResult {
+export function deserializeInput(
+  parsed: unknown,
+  previousQueries: QueryDraft[] = [],
+): DeserializeResult {
   const issues: Issue[] = []
   const root = asRecord(parsed)
   if (!root) {

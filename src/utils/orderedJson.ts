@@ -19,7 +19,11 @@
 const ORDER_MARKER = Symbol('explicitKeyOrder')
 
 export function markOrdered<T extends object>(value: T, order: string[]): T {
-  Object.defineProperty(value, ORDER_MARKER, { value: order, enumerable: false, configurable: true })
+  Object.defineProperty(value, ORDER_MARKER, {
+    value: order,
+    enumerable: false,
+    configurable: true,
+  })
   return value
 }
 
@@ -35,7 +39,8 @@ export function stringifyOrdered(value: unknown, indent = 2): string {
 
 function render(value: unknown, indent: number, depth: number): string {
   if (value === undefined || value === null) return 'null'
-  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return JSON.stringify(value)
+  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string')
+    return JSON.stringify(value)
 
   const pad = ' '.repeat(indent * (depth + 1))
   const closePad = ' '.repeat(indent * depth)

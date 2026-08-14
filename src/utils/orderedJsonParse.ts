@@ -22,7 +22,9 @@ export function parseOrderedJson(text: string): JsonValue {
   const value = parser.parseValue()
   parser.skipWhitespace()
   if (parser.pos < text.length) {
-    throw new SyntaxError(`Unexpected non-whitespace character after JSON value at position ${parser.pos}`)
+    throw new SyntaxError(
+      `Unexpected non-whitespace character after JSON value at position ${parser.pos}`,
+    )
   }
   return value
 }
@@ -49,7 +51,8 @@ class JsonParser {
   }
 
   private expect(ch: string): void {
-    if (this.char() !== ch) throw new SyntaxError(`Expected "${ch}" at position ${this.pos}, got ${this.describeHere()}`)
+    if (this.char() !== ch)
+      throw new SyntaxError(`Expected "${ch}" at position ${this.pos}, got ${this.describeHere()}`)
     this.pos++
   }
 
@@ -79,7 +82,10 @@ class JsonParser {
     }
     for (;;) {
       this.skipWhitespace()
-      if (this.char() !== '"') throw new SyntaxError(`Expected a string key at position ${this.pos}, got ${this.describeHere()}`)
+      if (this.char() !== '"')
+        throw new SyntaxError(
+          `Expected a string key at position ${this.pos}, got ${this.describeHere()}`,
+        )
       const key = this.parseString()
       this.skipWhitespace()
       this.expect(':')
@@ -95,7 +101,9 @@ class JsonParser {
         this.pos++
         break
       }
-      throw new SyntaxError(`Expected "," or "}" at position ${this.pos}, got ${this.describeHere()}`)
+      throw new SyntaxError(
+        `Expected "," or "}" at position ${this.pos}, got ${this.describeHere()}`,
+      )
     }
     return obj
   }
@@ -120,7 +128,9 @@ class JsonParser {
         this.pos++
         break
       }
-      throw new SyntaxError(`Expected "," or "]" at position ${this.pos}, got ${this.describeHere()}`)
+      throw new SyntaxError(
+        `Expected "," or "]" at position ${this.pos}, got ${this.describeHere()}`,
+      )
     }
     return arr
   }
@@ -130,16 +140,18 @@ class JsonParser {
     this.expect('"')
     let hasEscape = false
     while (this.char() !== '"') {
-      if (this.pos >= this.text.length) throw new SyntaxError(`Unterminated string starting at position ${start}`)
+      if (this.pos >= this.text.length)
+        throw new SyntaxError(`Unterminated string starting at position ${start}`)
       if (this.char() === '\\') {
         hasEscape = true
         this.pos++
-        if (this.pos >= this.text.length) throw new SyntaxError(`Unterminated escape at position ${this.pos}`)
+        if (this.pos >= this.text.length)
+          throw new SyntaxError(`Unterminated escape at position ${this.pos}`)
         if (this.char() === 'u') this.pos += 4
       }
       this.pos++
     }
-    this.pos++ // closing quote
+    this.pos++
     const raw = this.text.slice(start, this.pos)
     // Reuse JSON.parse for the actual unescaping (\uXXXX, \n, etc.) instead of reimplementing it —
     // `raw` is a single, self-contained, already-validated JSON string literal, so this is safe

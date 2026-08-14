@@ -5,7 +5,14 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { MoleculeType } from '@/types/of3'
 import type { ChainDraft, QueryDraft } from '@/types/draft'
-import { createEmptyChain, createEmptyQuery, createId, deserializeInput, emptyRaw, parseOf3Input } from '@/utils/of3Draft'
+import {
+  createEmptyChain,
+  createEmptyQuery,
+  createId,
+  deserializeInput,
+  emptyRaw,
+  parseOf3Input,
+} from '@/utils/of3Draft'
 import { serializeInput } from '@/utils/of3Serialize'
 import { validateInput, type Issue } from '@/utils/of3Validate'
 import { OF3_EXAMPLES } from '@/data/examples'
@@ -33,7 +40,10 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
   )
 
   const output = computed(() => serializeInput({ queries: queries.value, rootRaw: rootRaw.value }))
-  const issues = computed(() => [...importIssues.value, ...validateInput({ queries: queries.value, rootRaw: rootRaw.value })])
+  const issues = computed(() => [
+    ...importIssues.value,
+    ...validateInput({ queries: queries.value, rootRaw: rootRaw.value }),
+  ])
 
   function setActiveQuery(uiId: string) {
     if (queries.value.some((q) => q.uiId === uiId)) activeQueryUiId.value = uiId
@@ -58,7 +68,8 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
   function duplicateQuery(uiId: string) {
     const source = queries.value.find((q) => q.uiId === uiId)
     if (!source) return
-    const clone = deserializeInput(serializeInput({ queries: [source], rootRaw: emptyRaw() })).queries[0]
+    const clone = deserializeInput(serializeInput({ queries: [source], rootRaw: emptyRaw() }))
+      .queries[0]
     if (!clone) return
     clone.key = nextQueryKey(queries.value)
     queries.value.splice(queries.value.indexOf(source) + 1, 0, clone)
@@ -96,7 +107,10 @@ export const useOf3BuilderStore = defineStore('of3Builder', () => {
     if (query) query.pocketConstraintEnabled = enabled
   }
 
-  function setQueryMsaOptions(queryUiId: string, patch: Partial<Pick<QueryDraft, 'useMsas' | 'useMainMsas' | 'usePairedMsas'>>) {
+  function setQueryMsaOptions(
+    queryUiId: string,
+    patch: Partial<Pick<QueryDraft, 'useMsas' | 'useMainMsas' | 'usePairedMsas'>>,
+  ) {
     const query = queries.value.find((q) => q.uiId === queryUiId)
     if (query) Object.assign(query, patch)
   }

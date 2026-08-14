@@ -30,8 +30,6 @@ let applyTimer: ReturnType<typeof setTimeout> | undefined
 // what should flow into the textarea, so those still go through untouched.
 let applyingFromDraft = false
 
-// Only follow store changes while the draft has no unapplied edits, so the
-// user's in-progress typing (or an unresolved parse error) is never clobbered.
 watch(jsonText, (value) => {
   if (applyingFromDraft) return
   if (!dirty.value) draftText.value = value

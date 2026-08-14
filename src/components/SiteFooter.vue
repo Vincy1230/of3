@@ -6,10 +6,7 @@
 import { computed } from 'vue'
 import beianIcon from '@/assets/beian.png'
 
-// 备案号与对应链接都不写死在代码里，构建时通过环境变量整体注入
-// （见 .github/workflows/deploy.yml），本地开发未设置时不显示，不
-// 影响其他功能。每个备案号可以只给编号不给链接（退化为纯文本），
-// 但不能只给链接不给编号。版权文字不受这些变量影响，始终显示。
+// 备案号与对应链接构建时通过环境变量整体注入
 const icpCode = import.meta.env.VITE_ICP_CODE
 const icpUrl = import.meta.env.VITE_ICP_URL
 const mpsCode = import.meta.env.VITE_MPS_CODE

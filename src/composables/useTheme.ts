@@ -30,6 +30,7 @@ export function setThemeMode(mode: ThemeMode) {
 
 watchEffect(() => {
   if (typeof document === 'undefined') return
-  const resolved: ResolvedTheme = themeMode.value === 'auto' ? (systemPrefersDark.value ? 'dark' : 'light') : themeMode.value
+  const resolved: ResolvedTheme =
+    themeMode.value === 'auto' ? (systemPrefersDark.value ? 'dark' : 'light') : themeMode.value
   document.documentElement.dataset.theme = resolved
 })

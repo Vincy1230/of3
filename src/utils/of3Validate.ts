@@ -65,7 +65,12 @@ function parseList(raw: string): string[] {
     .filter((s) => s.length > 0)
 }
 
-function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<string>, issues: Issue[]): string[] {
+function validateChain(
+  chain: ChainDraft,
+  query: QueryDraft,
+  seenChainIds: Set<string>,
+  issues: Issue[],
+): string[] {
   const key = query.key.trim()
   const ids = parseList(chain.chainIds)
   const label = ids.join(',') || undefined
@@ -83,7 +88,13 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   }
 
   if (ids.length === 0) {
-    issues.push({ level: 'error', code: 'chainIdsEmpty', queryUiId: query.uiId, queryKey: key, chainUiId: chain.uiId })
+    issues.push({
+      level: 'error',
+      code: 'chainIdsEmpty',
+      queryUiId: query.uiId,
+      queryKey: key,
+      chainUiId: chain.uiId,
+    })
   }
   for (const id of ids) {
     if (seenChainIds.has(id)) {
@@ -159,7 +170,12 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
       chainLabel: label,
     })
   } else {
-    const pattern = chain.moleculeType === 'protein' ? PROTEIN_CHARS : chain.moleculeType === 'rna' ? RNA_CHARS : DNA_CHARS
+    const pattern =
+      chain.moleculeType === 'protein'
+        ? PROTEIN_CHARS
+        : chain.moleculeType === 'rna'
+          ? RNA_CHARS
+          : DNA_CHARS
     if (!pattern.test(sequence)) {
       issues.push({
         level: 'error',
@@ -173,7 +189,10 @@ function validateChain(chain: ChainDraft, query: QueryDraft, seenChainIds: Set<s
   }
 
   if (chain.moleculeType === 'protein') {
-    if (chain.templateAlignmentFilePath.trim() && chain.templateCifRows.some((row) => row.path.trim())) {
+    if (
+      chain.templateAlignmentFilePath.trim() &&
+      chain.templateCifRows.some((row) => row.path.trim())
+    ) {
       issues.push({
         level: 'error',
         code: 'chainTemplateConflict',
@@ -219,7 +238,13 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
   const key = query.key.trim()
 
   for (const field of query.raw.unrecognized) {
-    issues.push({ level: 'warning', code: 'queryUnrecognizedField', queryUiId: query.uiId, queryKey: key, params: { field } })
+    issues.push({
+      level: 'warning',
+      code: 'queryUnrecognizedField',
+      queryUiId: query.uiId,
+      queryKey: key,
+      params: { field },
+    })
   }
 
   if (query.chains.length === 0) {
@@ -238,20 +263,42 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
   }
 
   const hasCovalentBond = query.covalentBonds.some(
-    (row) => row.chain1.trim() && row.residue1.trim() && row.atom1.trim() && row.chain2.trim() && row.residue2.trim() && row.atom2.trim(),
+    (row) =>
+      row.chain1.trim() &&
+      row.residue1.trim() &&
+      row.atom1.trim() &&
+      row.chain2.trim() &&
+      row.residue2.trim() &&
+      row.atom2.trim(),
   )
   if (hasCovalentBond) {
-    issues.push({ level: 'warning', code: 'covalentBondsNoEffect', queryUiId: query.uiId, queryKey: key })
+    issues.push({
+      level: 'warning',
+      code: 'covalentBondsNoEffect',
+      queryUiId: query.uiId,
+      queryKey: key,
+    })
   }
 
   if (query.pocketConstraintEnabled) {
     for (const field of query.pocketConstraint.raw.unrecognized) {
-      issues.push({ level: 'error', code: 'pocketConstraintUnrecognizedField', queryUiId: query.uiId, queryKey: key, params: { field } })
+      issues.push({
+        level: 'error',
+        code: 'pocketConstraintUnrecognizedField',
+        queryUiId: query.uiId,
+        queryKey: key,
+        params: { field },
+      })
     }
 
     const ligandId = query.pocketConstraint.ligandChainId.trim()
     if (!ligandId) {
-      issues.push({ level: 'error', code: 'pocketLigandIdEmpty', queryUiId: query.uiId, queryKey: key })
+      issues.push({
+        level: 'error',
+        code: 'pocketLigandIdEmpty',
+        queryUiId: query.uiId,
+        queryKey: key,
+      })
     } else if (!ligandChainIdSet.has(ligandId)) {
       issues.push({
         level: 'error',
@@ -261,16 +308,28 @@ function validateQuery(query: QueryDraft, issues: Issue[]): void {
         params: { ligandId },
       })
     }
-    const residues = query.pocketConstraint.residues.filter((row) => row.chainId.trim() && row.residueId.trim())
+    const residues = query.pocketConstraint.residues.filter(
+      (row) => row.chainId.trim() && row.residueId.trim(),
+    )
     if (residues.length === 0) {
-      issues.push({ level: 'error', code: 'pocketResiduesEmpty', queryUiId: query.uiId, queryKey: key })
+      issues.push({
+        level: 'error',
+        code: 'pocketResiduesEmpty',
+        queryUiId: query.uiId,
+        queryKey: key,
+      })
     }
 
     const maxDistanceRaw = query.pocketConstraint.maxDistance.trim()
     if (maxDistanceRaw) {
       const maxDistance = Number(maxDistanceRaw)
       if (Number.isNaN(maxDistance) || maxDistance <= 0) {
-        issues.push({ level: 'error', code: 'pocketMaxDistanceInvalid', queryUiId: query.uiId, queryKey: key })
+        issues.push({
+          level: 'error',
+          code: 'pocketMaxDistanceInvalid',
+          queryUiId: query.uiId,
+          queryKey: key,
+        })
       }
     }
   }
@@ -292,9 +351,19 @@ export function validateInput(state: { queries: QueryDraft[]; rootRaw?: RawShape
   for (const query of state.queries) {
     const key = query.key.trim()
     if (!key) {
-      issues.push({ level: 'error', code: 'queryKeyEmpty', queryUiId: query.uiId, queryKey: query.key })
+      issues.push({
+        level: 'error',
+        code: 'queryKeyEmpty',
+        queryUiId: query.uiId,
+        queryKey: query.key,
+      })
     } else if (usedKeys.has(key)) {
-      issues.push({ level: 'error', code: 'queryKeyDuplicate', queryUiId: query.uiId, queryKey: key })
+      issues.push({
+        level: 'error',
+        code: 'queryKeyDuplicate',
+        queryUiId: query.uiId,
+        queryKey: key,
+      })
     }
     usedKeys.add(key)
 

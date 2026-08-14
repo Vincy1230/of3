@@ -19,7 +19,10 @@ function normalizeExpected(input: Of3Input): Of3Input {
       if (chain.molecule_type === 'ligand' && chain.ccd_codes) {
         chain.ccd_codes = normalizeStrOrList(chain.ccd_codes)
       }
-      if ((chain.molecule_type === 'protein' || chain.molecule_type === 'rna') && chain.main_msa_file_paths) {
+      if (
+        (chain.molecule_type === 'protein' || chain.molecule_type === 'rna') &&
+        chain.main_msa_file_paths
+      ) {
         chain.main_msa_file_paths = normalizeStrOrList(chain.main_msa_file_paths)
       }
       if (chain.molecule_type === 'protein' && chain.paired_msa_file_paths) {
@@ -50,8 +53,6 @@ describe('serializeInput', () => {
     expect(ligandOutput).not.toHaveProperty('chain_ids')
     expect(ligandOutput).not.toHaveProperty('smiles')
 
-    // Filling the field in should be exactly what makes it appear — the "explicit vs. absent" rule
-    // applies to required fields the same way it already does to optional ones.
     protein.chainIds = 'A'
     protein.sequence = 'ACDEFG'
     expect(serializeChain(protein)).toMatchObject({ chain_ids: 'A', sequence: 'ACDEFG' })
@@ -138,17 +139,23 @@ describe('serializeInput', () => {
     const text = JSON.stringify({
       queries: {
         demo: {
-          chains: [{ sequence: 'ACDEFG', molecule_type: 'protein', description: 'note', chain_ids: 'A' }],
+          chains: [
+            { sequence: 'ACDEFG', molecule_type: 'protein', description: 'note', chain_ids: 'A' },
+          ],
         },
       },
     })
     const draftState = deserializeInput(parseOf3Input(text))
 
-    // Simulate a UI edit that only touches "sequence" — same as ProteinChainForm's v-model would.
     draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
 
     const output = serializeInput(draftState)
-    expect(Object.keys(output.queries.demo!.chains[0]!)).toEqual(['sequence', 'molecule_type', 'description', 'chain_ids'])
+    expect(Object.keys(output.queries.demo!.chains[0]!)).toEqual([
+      'sequence',
+      'molecule_type',
+      'description',
+      'chain_ids',
+    ])
     expect(output.queries.demo!.chains[0]).toMatchObject({
       sequence: 'ACDEFGH',
       molecule_type: 'protein',
@@ -175,7 +182,6 @@ describe('serializeInput', () => {
     })
     const draftState = deserializeInput(parseOf3Input(text))
 
-    // Unrelated edit, same as above — should not cause these explicit defaults to be dropped.
     draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
 
     const output = serializeInput(draftState)
@@ -205,7 +211,6 @@ describe('serializeInput', () => {
     const draftState = deserializeInput(parseOf3Input(text))
     expect(draftState.rootRaw.unrecognized).toEqual(['ccd_file_path'])
 
-    // Unrelated edit, same as above.
     draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
 
     const output = serializeInput(draftState)

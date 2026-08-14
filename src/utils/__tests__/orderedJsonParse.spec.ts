@@ -54,7 +54,11 @@ describe('parseOrderedJson — matches native JSON.parse for values', () => {
               non_canonical_residues: { '1': 'MHO', '5': 'SEP' },
             },
           ],
-          pocket_constraint: { ligand_chain_id: 'L', pocket_residues: [['A', 1]], max_distance: 4.5 },
+          pocket_constraint: {
+            ligand_chain_id: 'L',
+            pocket_residues: [['A', 1]],
+            max_distance: 4.5,
+          },
         },
       },
     })

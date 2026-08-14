@@ -18,8 +18,6 @@ describe('deserializeInput — reconciliation against previous state', () => {
     const queryBefore = before.queries[0]!
     const chainBefore = queryBefore.chains[0]!
 
-    // Same query key, same chain index, only the sequence changed — as if the user tweaked one
-    // character in the JSON textarea.
     const second: Of3Input = {
       queries: {
         query_1: {
@@ -31,7 +29,7 @@ describe('deserializeInput — reconciliation against previous state', () => {
     const queryAfter = after.queries[0]!
     const chainAfter = queryAfter.chains[0]!
 
-    expect(queryAfter).toBe(queryBefore) // same object reference — anything holding it stays valid
+    expect(queryAfter).toBe(queryBefore)
     expect(queryAfter.uiId).toBe(queryBefore.uiId)
     expect(chainAfter).toBe(chainBefore)
     expect(chainAfter.uiId).toBe(chainBefore.uiId)

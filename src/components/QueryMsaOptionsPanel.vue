@@ -14,7 +14,11 @@ const store = useOf3BuilderStore()
 const activeQuery = computed(() => store.activeQuery)
 
 const hasCustomValues = computed(
-  () => !!activeQuery.value && (!activeQuery.value.useMsas || !activeQuery.value.useMainMsas || !activeQuery.value.usePairedMsas),
+  () =>
+    !!activeQuery.value &&
+    (!activeQuery.value.useMsas ||
+      !activeQuery.value.useMainMsas ||
+      !activeQuery.value.usePairedMsas),
 )
 
 function toggle(field: 'useMsas' | 'useMainMsas' | 'usePairedMsas', checked: boolean) {
@@ -23,7 +27,12 @@ function toggle(field: 'useMsas' | 'useMainMsas' | 'usePairedMsas', checked: boo
 </script>
 
 <template>
-  <CollapsibleSection v-if="activeQuery" :title="t('queryOptions.title')" default-collapsed :has-custom-values="hasCustomValues">
+  <CollapsibleSection
+    v-if="activeQuery"
+    :title="t('queryOptions.title')"
+    default-collapsed
+    :has-custom-values="hasCustomValues"
+  >
     <span class="chip">{{ activeQuery.key }}</span>
     <p class="hint">{{ t('queryOptions.hint') }}</p>
 
