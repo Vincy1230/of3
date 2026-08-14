@@ -2,7 +2,7 @@
 // Email: vincy@vincy1230.net
 
 import type { Chain, MoleculeType, Of3Input, Of3Query } from '@/types/of3'
-import type { BuilderState, ChainDraft, QueryDraft } from '@/types/draft'
+import type { BuilderState, ChainDraft, QueryDraft, RawShape } from '@/types/draft'
 
 const MOLECULE_TYPES: MoleculeType[] = ['protein', 'rna', 'dna', 'ligand']
 
@@ -50,6 +50,52 @@ const CHAIN_KEYS = new Set([
   'cyclic',
 ])
 
+// Subset of the whitelists above that this app actually reads/writes through the form (vs. just
+// recognizing as schema-valid). Anything schema-valid but NOT in these sets — e.g. query_name
+// (always overwritten by OpenFold3 from the dict key anyway), template_entry_chain_ids ("only
+// populated automatically" per the docs) — is captured as a RawShape "extra" instead: preserved
+// verbatim through every edit, never touched by the UI, because there's no form control for it.
+const ROOT_MANAGED_FIELDS = new Set(['queries'])
+const QUERY_MANAGED_FIELDS = new Set(['chains', 'pocket_constraint', 'use_msas', 'use_main_msas', 'use_paired_msas', 'covalent_bonds'])
+const POCKET_CONSTRAINT_MANAGED_FIELDS = new Set(['ligand_chain_id', 'pocket_residues', 'max_distance'])
+// Chain fields ARE partitioned per molecule_type here (unlike CHAIN_KEYS above), so e.g. a stray
+// "smiles" that somehow ended up on an imported protein chain is preserved as an extra rather
+// than silently adopted as if the form had a control for it.
+const CHAIN_MANAGED_FIELDS: Record<MoleculeType, Set<string>> = {
+  protein: new Set([
+    'molecule_type',
+    'chain_ids',
+    'description',
+    'sequence',
+    'non_canonical_residues',
+    'main_msa_file_paths',
+    'paired_msa_file_paths',
+    'template_alignment_file_path',
+    'template_cif_paths',
+    'template_cif_chain_ids',
+    'cyclic',
+  ]),
+  rna: new Set(['molecule_type', 'chain_ids', 'sequence', 'main_msa_file_paths', 'cyclic']),
+  dna: new Set(['molecule_type', 'chain_ids', 'sequence', 'cyclic']),
+  ligand: new Set(['molecule_type', 'chain_ids', 'smiles', 'ccd_codes', 'sdf_file_path']),
+}
+
+/** Captures a RawShape from a live (possibly untyped/malformed) source object. */
+function captureRaw(obj: unknown, managedFields: Set<string>): RawShape {
+  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return { order: [], extras: {} }
+  const record = obj as Record<string, unknown>
+  const order = Object.keys(record)
+  const extras: Record<string, unknown> = {}
+  for (const key of order) {
+    if (!managedFields.has(key)) extras[key] = record[key]
+  }
+  return { order, extras }
+}
+
+export function emptyRaw(): RawShape {
+  return { order: [], extras: {} }
+}
+
 /** An unrecognized field that real OpenFold3 would silently drop rather than reject. */
 export interface UnknownFieldWarning {
   path: string
@@ -87,6 +133,7 @@ export function createEmptyChain(moleculeType: MoleculeType): ChainDraft {
     templateCifRows: [],
     nonCanonicalResidues: [],
     cyclic: false,
+    raw: emptyRaw(),
   }
 }
 
@@ -104,7 +151,9 @@ export function createEmptyQuery(key: string): QueryDraft {
       ligandChainId: '',
       residues: [],
       maxDistance: '',
+      raw: emptyRaw(),
     },
+    raw: emptyRaw(),
   }
 }
 
@@ -119,6 +168,7 @@ function toRawList(value: string | string[] | undefined): string {
 
 function chainFromSpec(chain: Chain): ChainDraft {
   const draft = createEmptyChain(chain.molecule_type)
+  draft.raw = captureRaw(chain, CHAIN_MANAGED_FIELDS[chain.molecule_type])
   draft.chainIds = toRawList(chain.chain_ids)
 
   if (chain.molecule_type === 'protein') {
@@ -163,9 +213,29 @@ function chainFromSpec(chain: Chain): ChainDraft {
   return draft
 }
 
-function queryFromSpec(key: string, query: Of3Query): QueryDraft {
+/**
+ * Re-derives a chain's fields from freshly-parsed JSON but keeps `existing`'s object identity
+ * (mutating it in place instead of returning a new object). This is what keeps a JSON-panel edit
+ * from silently disconnecting anything holding a direct reference to that chain — e.g.
+ * ChainList.vue's `editingChain` ref, or the active-chain state driving an open ChainEditorModal —
+ * and what lets the sidebar's current selection survive typing in the JSON textarea.
+ */
+function reconcileChain(existing: ChainDraft, chain: Chain): ChainDraft {
+  const uiId = existing.uiId
+  Object.assign(existing, chainFromSpec(chain))
+  existing.uiId = uiId
+  return existing
+}
+
+// `existingChains`, when given, lets a chain at the same index keep its identity (uiId, and the
+// object itself) across a re-parse instead of becoming a brand-new object — see reconcileChain.
+function queryFromSpec(key: string, query: Of3Query, existingChains: ChainDraft[] = []): QueryDraft {
   const draft = createEmptyQuery(key)
-  draft.chains = query.chains.map(chainFromSpec)
+  draft.raw = captureRaw(query, QUERY_MANAGED_FIELDS)
+  draft.chains = query.chains.map((chain, i) => {
+    const existing = existingChains[i]
+    return existing ? reconcileChain(existing, chain) : chainFromSpec(chain)
+  })
   draft.useMsas = query.use_msas ?? true
   draft.useMainMsas = query.use_main_msas ?? true
   draft.usePairedMsas = query.use_paired_msas ?? true
@@ -188,6 +258,7 @@ function queryFromSpec(key: string, query: Of3Query): QueryDraft {
     // type promises, without throwing.
     const rawResidues = Array.isArray(query.pocket_constraint.pocket_residues) ? query.pocket_constraint.pocket_residues : []
     draft.pocketConstraint = {
+      raw: captureRaw(query.pocket_constraint, POCKET_CONSTRAINT_MANAGED_FIELDS),
       ligandChainId: typeof query.pocket_constraint.ligand_chain_id === 'string' ? query.pocket_constraint.ligand_chain_id : '',
       residues: rawResidues.map((entry) => {
         const [chainId, residueId] = Array.isArray(entry) ? entry : []
@@ -202,9 +273,29 @@ function queryFromSpec(key: string, query: Of3Query): QueryDraft {
   return draft
 }
 
-export function deserializeInput(input: Of3Input): Pick<BuilderState, 'queries'> {
-  const queries = Object.entries(input.queries).map(([key, query]) => queryFromSpec(key, query))
-  return { queries }
+/** Same identity-preservation as reconcileChain, one level up: keeps `existing`'s uiId/object,
+ * and passes its chains through as the reconciliation targets for the query's own chains. */
+function reconcileQuery(existing: QueryDraft, key: string, query: Of3Query): QueryDraft {
+  const uiId = existing.uiId
+  Object.assign(existing, queryFromSpec(key, query, existing.chains))
+  existing.uiId = uiId
+  return existing
+}
+
+/**
+ * `previousQueries`, when given, is matched against the new input by query key (then chains by
+ * index within each matched query) so re-parsing the same document after a small edit reuses the
+ * existing draft objects instead of replacing them wholesale — see reconcileQuery/reconcileChain.
+ * Only loadFromJson uses this; loadExample/reset intentionally start clean.
+ */
+export function deserializeInput(input: Of3Input, previousQueries: QueryDraft[] = []): Pick<BuilderState, 'queries' | 'rootRaw'> {
+  const previousByKey = new Map(previousQueries.map((q) => [q.key, q]))
+  const queries = Object.entries(input.queries).map(([key, query]) => {
+    const existing = previousByKey.get(key)
+    return existing ? reconcileQuery(existing, key, query) : queryFromSpec(key, query)
+  })
+  const rootRaw = captureRaw(input, ROOT_MANAGED_FIELDS)
+  return { queries, rootRaw }
 }
 
 /**

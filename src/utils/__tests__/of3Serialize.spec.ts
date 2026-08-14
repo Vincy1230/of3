@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { OF3_EXAMPLES } from '@/data/examples'
-import { deserializeInput } from '@/utils/of3Draft'
+import { deserializeInput, parseOf3Input } from '@/utils/of3Draft'
 import { serializeInput } from '@/utils/of3Serialize'
 import type { Of3Input } from '@/types/of3'
 
@@ -113,6 +113,63 @@ describe('serializeInput', () => {
           ['L', 1, 3],
         ],
       ],
+    })
+  })
+
+  it('preserves the original field order after editing an unrelated field', () => {
+    const text = JSON.stringify({
+      queries: {
+        demo: {
+          chains: [{ sequence: 'ACDEFG', molecule_type: 'protein', description: 'note', chain_ids: 'A' }],
+        },
+      },
+    })
+    const { input } = parseOf3Input(text)
+    const draftState = deserializeInput(input)
+
+    // Simulate a UI edit that only touches "sequence" — same as ProteinChainForm's v-model would.
+    draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
+
+    const output = serializeInput(draftState)
+    expect(Object.keys(output.queries.demo!.chains[0]!)).toEqual(['sequence', 'molecule_type', 'description', 'chain_ids'])
+    expect(output.queries.demo!.chains[0]).toMatchObject({
+      sequence: 'ACDEFGH',
+      molecule_type: 'protein',
+      description: 'note',
+      chain_ids: 'A',
+    })
+  })
+
+  it('preserves fields this app does not model (query_name, template_entry_chain_ids, root-level extras) untouched through an edit', () => {
+    const text = JSON.stringify({
+      ccd_file_path: '/some/ccd.cif',
+      queries: {
+        demo: {
+          query_name: 'ignored-by-openfold3-anyway',
+          chains: [
+            {
+              molecule_type: 'protein',
+              chain_ids: 'A',
+              sequence: 'ACDEFG',
+              template_entry_chain_ids: ['1abc_A'],
+            },
+          ],
+        },
+      },
+    })
+    const { input, warnings } = parseOf3Input(text)
+    expect(warnings).toEqual([{ path: 'root', key: 'ccd_file_path' }])
+    const draftState = deserializeInput(input)
+
+    // Unrelated edit, same as above.
+    draftState.queries[0]!.chains[0]!.sequence = 'ACDEFGH'
+
+    const output = serializeInput(draftState)
+    expect(output).toMatchObject({ ccd_file_path: '/some/ccd.cif' })
+    expect(output.queries.demo).toMatchObject({ query_name: 'ignored-by-openfold3-anyway' })
+    expect(output.queries.demo!.chains[0]).toMatchObject({
+      sequence: 'ACDEFGH',
+      template_entry_chain_ids: ['1abc_A'],
     })
   })
 })

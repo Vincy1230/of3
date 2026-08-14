@@ -2,7 +2,7 @@
 // Email: vincy@vincy1230.net
 
 import { describe, expect, it } from 'vitest'
-import { createEmptyChain, createEmptyQuery } from '@/utils/of3Draft'
+import { createEmptyChain, createEmptyQuery, emptyRaw } from '@/utils/of3Draft'
 import { validateInput } from '@/utils/of3Validate'
 import type { QueryDraft } from '@/types/draft'
 
@@ -96,6 +96,7 @@ describe('validateInput', () => {
       ligandChainId: 'Z',
       residues: [{ chainId: 'A', residueId: '1' }],
       maxDistance: '',
+      raw: emptyRaw(),
     }
     expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-ligand-not-found')
   })
@@ -103,14 +104,19 @@ describe('validateInput', () => {
   it('flags a pocket constraint with no residues', () => {
     const query = validProteinLigandQuery()
     query.pocketConstraintEnabled = true
-    query.pocketConstraint = { ligandChainId: 'L', residues: [], maxDistance: '' }
+    query.pocketConstraint = { ligandChainId: 'L', residues: [], maxDistance: '', raw: emptyRaw() }
     expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-residues-empty')
   })
 
   it('flags a pocket constraint with no ligand chain selected', () => {
     const query = validProteinLigandQuery()
     query.pocketConstraintEnabled = true
-    query.pocketConstraint = { ligandChainId: '', residues: [{ chainId: 'A', residueId: '1' }], maxDistance: '' }
+    query.pocketConstraint = {
+      ligandChainId: '',
+      residues: [{ chainId: 'A', residueId: '1' }],
+      maxDistance: '',
+      raw: emptyRaw(),
+    }
     expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-ligand-id-empty')
   })
 
@@ -121,6 +127,7 @@ describe('validateInput', () => {
       ligandChainId: 'L',
       residues: [{ chainId: 'A', residueId: '1' }],
       maxDistance: '-1',
+      raw: emptyRaw(),
     }
     expect(codesOf(validateInput({ queries: [query] }))).toContain('pocket-max-distance-invalid')
   })
@@ -139,6 +146,7 @@ describe('validateInput', () => {
       ligandChainId: 'L',
       residues: [{ chainId: 'A', residueId: '1' }],
       maxDistance: '4.0',
+      raw: emptyRaw(),
     }
     expect(validateInput({ queries: [query] })).toEqual([])
   })

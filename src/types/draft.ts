@@ -3,6 +3,18 @@
 
 import type { MoleculeType } from './of3'
 
+/**
+ * Preserves the shape of a JSON object across the edit round-trip: the key order it was imported
+ * with (or [] if this object was built from scratch in the UI), and any keys present in the
+ * source that this app doesn't model/edit. Re-serializing threads current field values back
+ * through `order`, re-emits `extras` verbatim, and only appends newly-introduced fields at the
+ * end — so editing one field never reorders, drops, or rewrites the rest of the object.
+ */
+export interface RawShape {
+  order: string[]
+  extras: Record<string, unknown>
+}
+
 export interface NonCanonicalResidueRow {
   /** 1-based residue index, raw string, converted to a numeric key on serialize */
   index: string
@@ -36,6 +48,7 @@ export interface ChainDraft {
   nonCanonicalResidues: NonCanonicalResidueRow[]
   /** Protein/RNA/DNA only: marks the chain as a head-to-tail cyclic polymer. */
   cyclic: boolean
+  raw: RawShape
 }
 
 export interface PocketResidueRow {
@@ -49,6 +62,7 @@ export interface PocketConstraintDraft {
   residues: PocketResidueRow[]
   /** Raw string; empty or equal to the 4.0 default is omitted from the JSON */
   maxDistance: string
+  raw: RawShape
 }
 
 export interface CovalentBondRow {
@@ -74,9 +88,12 @@ export interface QueryDraft {
   covalentBonds: CovalentBondRow[]
   pocketConstraintEnabled: boolean
   pocketConstraint: PocketConstraintDraft
+  raw: RawShape
 }
 
 export interface BuilderState {
   queries: QueryDraft[]
   activeQueryUiId: string | null
+  /** Root-level RawShape for the whole input document (order + extras like a stray ccd_file_path/seeds). */
+  rootRaw: RawShape
 }
