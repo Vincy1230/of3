@@ -85,11 +85,9 @@ export default {
     ligandModeLabel: 'Specify ligand by',
     ligandModeSmiles: 'SMILES',
     ligandModeCcd: 'CCD code',
-    ligandModeSdf: 'SDF file',
     smilesLabel: 'SMILES string',
-    ccdCodesLabel: 'CCD code(s)',
-    ccdCodesHint: 'Comma-separated three-letter component codes, e.g. "NAG".',
-    sdfFilePathLabel: 'SDF file path',
+    ccdCodesLabel: 'CCD code',
+    ccdCodesHint: 'A single three-letter component code, e.g. "NAG" (multiple codes per chain aren\'t supported yet).',
     cyclic: 'Cyclic (head-to-tail)',
     advancedTitle: 'MSA & template options',
     mainMsaPathsLabel: 'Main MSA file path(s)',
@@ -131,15 +129,6 @@ export default {
     useMainMsas: 'Use main (unpaired) MSAs',
     usePairedMsas: 'Use paired MSAs',
   },
-  covalentBonds: {
-    title: 'Covalent bonds',
-    hint: 'Explicit atom-to-atom bonds, e.g. a disulfide bridge or a ligand-to-residue linkage. atom_id indexes into the residue\'s canonical atom order.',
-    atomLabel: 'Atom {n}',
-    chainIdLabel: 'Chain ID',
-    residueIdLabel: 'Residue index',
-    atomIdLabel: 'Atom index',
-    addBond: 'Add bond',
-  },
   jsonPreview: {
     title: 'Generated JSON',
     copy: 'Copy JSON',
@@ -168,7 +157,7 @@ export default {
     'chain-ids-duplicate': 'Chain ID "{id}" is used more than once in this query.',
     'sequence-empty': 'Sequence cannot be empty.',
     'sequence-invalid-chars': 'Sequence contains characters outside the allowed alphabet.',
-    'ligand-missing-identifier': 'Provide a SMILES string, a CCD code, or an SDF file path for this ligand.',
+    'ligand-missing-identifier': 'Provide either a SMILES string or a CCD code for this ligand.',
     'ligand-sdf-not-implemented':
       "OpenFold3 doesn't implement SDF ligand input yet — it raises NotImplementedError while building the structure. Use SMILES or a CCD code instead.",
     'ligand-multiple-ccd-not-implemented':
