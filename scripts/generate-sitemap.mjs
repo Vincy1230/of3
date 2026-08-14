@@ -4,13 +4,7 @@
 import { writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import {
-  SITE_URL,
-  LOCALE_PATHS,
-  SUPPORTED_LOCALES,
-  HREFLANG,
-  DEFAULT_LOCALE,
-} from '../src/seo/meta.mjs'
+import { SITE_URL, LOCALE_PATHS, SUPPORTED_LOCALES, HREFLANG, DEFAULT_LOCALE } from '../src/seo/meta.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const distDir = path.resolve(__dirname, '../dist')
@@ -19,8 +13,7 @@ function buildSitemap() {
   const lastmod = new Date().toISOString().slice(0, 10)
 
   const alternates = SUPPORTED_LOCALES.map(
-    (l) =>
-      `      <xhtml:link rel="alternate" hreflang="${HREFLANG[l]}" href="${SITE_URL}${LOCALE_PATHS[l]}" />`,
+    (l) => `      <xhtml:link rel="alternate" hreflang="${HREFLANG[l]}" href="${SITE_URL}${LOCALE_PATHS[l]}" />`,
   ).join('\n')
   const xDefault = `      <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${LOCALE_PATHS[DEFAULT_LOCALE]}" />`
 

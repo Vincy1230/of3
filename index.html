@@ -1,58 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
   Author: Vincy SHI
   Email: vincy@vincy1230.net
 -->
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON"
-    />
-    <meta
-      name="keywords"
-      content="OpenFold3, structure prediction, protein structure, JSON generator, bioinformatics, AlphaFold, ligand, MSA, Vincy, GitHub"
-    />
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON">
+    <meta name="keywords" content="OpenFold3, structure prediction, protein structure, JSON generator, bioinformatics, AlphaFold, ligand, MSA, Vincy, GitHub">
 
-    <meta
-      property="og:title"
-      content="OpenFold3 Input Builder · Structure-Prediction JSON Generator"
-    />
-    <meta
-      property="og:description"
-      content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON"
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://of3.vincy1230.net/en/" />
-    <meta property="og:image" content="https://of3.vincy1230.net/og-image.jpg" />
-    <meta property="og:locale" content="en_US" />
-    <meta
-      property="og:site_name"
-      content="OpenFold3 Input Builder · Structure-Prediction JSON Generator"
-    />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="OpenFold3 Input Builder · Structure-Prediction JSON Generator"
-    />
-    <meta
-      name="twitter:description"
-      content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON"
-    />
-    <meta name="twitter:image" content="https://of3.vincy1230.net/og-image.jpg" />
+    <meta property="og:title" content="OpenFold3 Input Builder · Structure-Prediction JSON Generator">
+    <meta property="og:description" content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://of3.vincy1230.net/en/">
+    <meta property="og:image" content="https://of3.vincy1230.net/og-image.jpg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="OpenFold3 Input Builder · Structure-Prediction JSON Generator">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenFold3 Input Builder · Structure-Prediction JSON Generator">
+    <meta name="twitter:description" content="A step-by-step guided form for building OpenFold3 structure-prediction input JSON">
+    <meta name="twitter:image" content="https://of3.vincy1230.net/og-image.jpg">
 
-    <link rel="preconnect" href="https://fonts.loli.net" />
-    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin />
+    <link rel="preconnect" href="https://fonts.loli.net">
+    <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
     <link
       href="https://fonts.loli.net/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
       rel="stylesheet"
-    />
+    >
     <title>OpenFold3 Input Builder · Structure-Prediction JSON Generator</title>
 
     <meta name="baidu-site-verification" content="%VITE_BAIDU_SITE_VERIFICATION%" />
@@ -64,7 +43,7 @@
       // Pages: 404.html encodes the real path into a "?/" query string and
       // bounces to the root; this decodes it back before Vue Router takes
       // over. Reference: https://github.com/rafgraph/spa-github-pages
-      ;(function (l) {
+      (function (l) {
         if (l.search[1] === '/') {
           var decoded = l.search
             .slice(1)
@@ -85,11 +64,7 @@
           var stored = localStorage.getItem('of3:theme')
           var mode = stored === 'light' || stored === 'dark' ? stored : 'auto'
           var resolved =
-            mode === 'auto'
-              ? matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light'
-              : mode
+            mode === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode
           document.documentElement.dataset.theme = resolved
         } catch (e) {}
       })()

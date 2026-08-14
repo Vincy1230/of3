@@ -1,11 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
   Author: Vincy SHI
   Email: vincy@vincy1230.net
 -->
 <html>
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>Redirecting…</title>
     <script type="text/javascript">
       // Static hosting (GitHub Pages) has no server-side routing, so a
@@ -16,14 +16,10 @@
       // Reference: https://github.com/rafgraph/spa-github-pages
       var l = window.location
       l.replace(
-        l.protocol +
-          '//' +
-          l.hostname +
-          (l.port ? ':' + l.port : '') +
-          '/?/' +
-          l.pathname.slice(1).replace(/&/g, '~and~') +
-          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-          l.hash,
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/?/' +
+        l.pathname.slice(1).replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
       )
     </script>
   </head>
